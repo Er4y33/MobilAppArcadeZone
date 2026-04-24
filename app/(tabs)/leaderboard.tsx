@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   emptyText: {
-    color: "#9CA3AF",
+    color: "#2d3b52",
     fontSize: 16,
     textAlign: "center",
   },
