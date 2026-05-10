@@ -16,28 +16,28 @@ export default function HomeScreen() {
       </View>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#7C3AED" }]}
+        style={[styles.button, { backgroundColor: "#A855F7" }]}
         onPress={() => router.push("/(tabs)/games")}
       >
         <Text style={styles.buttonText}>OYUNLAR</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#F59E0B" }]}
+        style={[styles.button, { backgroundColor: "#FFD54F" }]}
         onPress={() => router.push("/(tabs)/leaderboard")}
       >
         <Text style={styles.buttonText}>LİDERLİK TABLOSU</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#06B6D4" }]}
+        style={[styles.button, { backgroundColor: "#4DD0E1" }]}
         onPress={() => router.push("/(tabs)/profile")}
       >
         <Text style={styles.buttonText}>PROFİL</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#374151" }]}
+        style={[styles.button, { backgroundColor: "#A0AEC0" }]}
         onPress={() => router.push("/(tabs)/settings")}
       >
         <Text style={styles.buttonText}>AYARLAR</Text>
