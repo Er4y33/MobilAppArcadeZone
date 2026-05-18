@@ -22,7 +22,7 @@ export default function Index() {
   }
 
   if (session) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)/games" />;
   }
 
   return <Redirect href="/(auth)/login" />;

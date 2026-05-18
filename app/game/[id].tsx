@@ -14,14 +14,13 @@ export default function GameDetail() {
       router.push("/game/play/reaction");
       return;
     }
-
     if (id === "memory") {
       router.push("/game/play/memory");
       return;
     }
-
-    if (id === "swipe") {
-      router.push("/game/play/swipe");
+    // swipe yerine sonsaniye rotasına yönlendiriyoruz
+    if (id === "sonsaniye") {
+      router.push("/game/play/sonsaniye");
       return;
     }
   };

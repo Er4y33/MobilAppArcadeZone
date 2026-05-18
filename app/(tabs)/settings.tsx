@@ -1,11 +1,21 @@
+import { router } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SettingsScreen() {
   const [music, setMusic] = useState(true);
   const [sound, setSound] = useState(true);
   const [notifications, setNotifications] = useState(false);
+
+  // AuthContext'ten çıkış yapma fonksiyonunu alıyoruz
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut(); // Supabase'den ve telefon hafızasından oturumu siler
+    router.replace("/(auth)/login"); // Login ekranına geri şutlar
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -25,6 +35,11 @@ export default function SettingsScreen() {
         <Text style={styles.label}>Bildirimler</Text>
         <Switch value={notifications} onValueChange={setNotifications} />
       </View>
+
+      {/* Çıkış Yap Butonu */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+        <Text style={styles.logoutText}>Hesaptan Çıkış Yap</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -54,5 +69,17 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  logoutButton: {
+    marginTop: 20,
+    backgroundColor: "#EF4444", // Kırmızı çıkış butonu rengi
+    padding: 16,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  logoutText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
   },
 });

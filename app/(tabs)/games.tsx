@@ -34,17 +34,18 @@ export default function GamesScreen() {
         <Text style={styles.cardText}>Kart eşleştirme oyunu</Text>
       </TouchableOpacity>
 
+      {/* Son Saniye Oyunu Olarak Güncellendi */}
       <TouchableOpacity
-        style={[styles.card, { borderLeftColor: "#F59E0B" }]}
+        style={[styles.card, { borderLeftColor: "#c8ff3e" }]}
         onPress={() =>
           router.push({
             pathname: "/game/[id]",
-            params: { id: "swipe", title: "Swipe Dodge" },
+            params: { id: "sonsaniye", title: "Son Saniye" },
           })
         }
       >
-        <Text style={styles.cardTitle}>Swipe Dodge</Text>
-        <Text style={styles.cardText}>Engellerden kaçma oyunu</Text>
+        <Text style={styles.cardTitle}>Son Saniye</Text>
+        <Text style={styles.cardText}>Karışık harfli kelime çözme oyunu</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

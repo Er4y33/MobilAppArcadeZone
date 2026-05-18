@@ -2,42 +2,53 @@ import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../context/AuthContext";
 
 export default function HomeScreen() {
+  const { user, profile } = useAuth();
+
+  const username = profile?.username || user?.email?.split("@")[0] || "Oyuncu";
+  const level = profile?.level || 1;
+  const coins = profile?.coins || 0;
+  const xp = profile?.xp || 0; // XP'yi çekiyoruz
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.logo}>ARCADEZONE</Text>
       <Text style={styles.subtitle}>Ana Menü</Text>
 
       <View style={styles.profileCard}>
-        <Text style={styles.player}>Player123</Text>
-        <Text style={styles.info}>Seviye 7</Text>
-        <Text style={styles.info}>Coin: 1250</Text>
+        <Text style={styles.player}>{username}</Text>
+        {/* Seviye ve XP'yi yanyana yazdırıyoruz */}
+        <Text style={styles.info}>
+          Seviye {level} (XP: {xp})
+        </Text>
+        <Text style={styles.info}>Coin: {coins}</Text>
       </View>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#A855F7" }]}
+        style={[styles.button, { backgroundColor: "#7C3AED" }]}
         onPress={() => router.push("/(tabs)/games")}
       >
         <Text style={styles.buttonText}>OYUNLAR</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#FFD54F" }]}
+        style={[styles.button, { backgroundColor: "#F59E0B" }]}
         onPress={() => router.push("/(tabs)/leaderboard")}
       >
         <Text style={styles.buttonText}>LİDERLİK TABLOSU</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#4DD0E1" }]}
+        style={[styles.button, { backgroundColor: "#06B6D4" }]}
         onPress={() => router.push("/(tabs)/profile")}
       >
         <Text style={styles.buttonText}>PROFİL</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#A0AEC0" }]}
+        style={[styles.button, { backgroundColor: "#374151" }]}
         onPress={() => router.push("/(tabs)/settings")}
       >
         <Text style={styles.buttonText}>AYARLAR</Text>
@@ -78,20 +89,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 8,
   },
-  info: {
-    color: "#9CA3AF",
-    fontSize: 15,
-    marginBottom: 4,
-  },
+  info: { color: "#9CA3AF", fontSize: 15, marginBottom: 4 },
   button: {
     padding: 18,
     borderRadius: 16,
     marginBottom: 14,
     alignItems: "center",
   },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "800",
-  },
+  buttonText: { color: "#FFFFFF", fontSize: 17, fontWeight: "800" },
 });
