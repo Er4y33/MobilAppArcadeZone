@@ -11,7 +11,9 @@ type CardType = {
   matched: boolean;
 };
 
-const baseCards = ["A", "B", "C", "D"];
+// 4 kartlık (A, B, C, D) diziyi 8 kartlık (A'dan H'ye) hale getirdik.
+// Toplamda 8 çift = 16 kart olacak.
+const baseCards = ["🍎", "🍌", "🍇", "🍉", "🍓", "🍒", "🍑", "🍍"];
 
 function shuffleArray<T>(array: T[]): T[] {
   return [...array].sort(() => Math.random() - 0.5);

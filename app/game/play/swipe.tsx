@@ -1,11 +1,11 @@
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
@@ -32,6 +32,9 @@ export default function SwipeDodgeScreen() {
   const enemyLaneRef = useRef<Lane>(1);
   const scoreRef = useRef(0);
   const submittedScoreRef = useRef(false);
+
+  // Hız ayarı için yeni bir referans ekledik (Başlangıç hızı: 16)
+  const speedRef = useRef(16);
 
   const { addScore } = useScores();
 
@@ -81,9 +84,13 @@ export default function SwipeDodgeScreen() {
     setGameOver(false);
     submittedScoreRef.current = false;
 
+    // Oyun başladığında hızı varsayılan (16) değerine geri çekiyoruz
+    speedRef.current = 16;
+
     intervalRef.current = setInterval(() => {
       setEnemyY((prevY) => {
-        const nextY = prevY + 16;
+        // Sabit 16 yerine dinamik hız değişkenimizi kullanıyoruz
+        const nextY = prevY + speedRef.current;
 
         const collided =
           nextY + ENEMY_SIZE >= PLAYER_Y &&
@@ -106,6 +113,12 @@ export default function SwipeDodgeScreen() {
             scoreRef.current = next;
             return next;
           });
+
+          // Her başarılı atlatmada (skor arttığında) hızı 0.5 artır
+          // Ama bug oluşmaması için hızı maksimum 40 ile sınırlandır
+          if (speedRef.current < 40) {
+            speedRef.current += 0.5;
+          }
 
           return 0;
         }

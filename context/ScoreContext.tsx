@@ -1,9 +1,9 @@
 import React, {
-    createContext,
-    ReactNode,
-    useContext,
-    useMemo,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useMemo,
+  useState,
 } from "react";
 
 export type GameKey = "reaction" | "memory" | "swipe";

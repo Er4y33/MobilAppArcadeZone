@@ -18,13 +18,13 @@ export default function ProfileScreen() {
         <Text style={styles.name}>Player123</Text>
         <Text style={styles.info}>Toplam Oyun: {scores.length}</Text>
         <Text style={styles.info}>
-          En İyi Reaction: {reactionBest ? `${reactionBest.score} ms` : "-"}
+          En iyi Reaction: {reactionBest ? `${reactionBest.score} ms` : "-"}
         </Text>
         <Text style={styles.info}>
-          En İyi Memory: {memoryBest ? `${memoryBest.score} moves` : "-"}
+          En iyi Memory: {memoryBest ? `${memoryBest.score} moves` : "-"}
         </Text>
         <Text style={styles.info}>
-          En İyi Swipe: {swipeBest ? `${swipeBest.score} points` : "-"}
+          En iyi Swipe: {swipeBest ? `${swipeBest.score} points` : "-"}
         </Text>
       </View>
     </SafeAreaView>
