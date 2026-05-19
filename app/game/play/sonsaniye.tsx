@@ -9,134 +9,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
+import { useTheme } from "../../../context/ThemeContext";
+import {
+  LEVELS,
+  MAX_TIME,
+  WORDS_PER_LEVEL,
+  shuffleLetters,
+} from "../../data/sonsaniyeKelimeler";
 
-// ===== KELİME HAVUZLARI (Orijinal HTML'den birebir alındı) =====
-const SEVIYE_1 = [
-  "aslan",
-  "bulut",
-  "çilek",
-  "demir",
-  "elmas",
-  "fener",
-  "güneş",
-  "hamur",
-  "ırmak",
-  "kavun",
-  "limon",
-  "makas",
-  "nehir",
-  "orman",
-  "pamuk",
-  "roman",
-  "sakal",
-  "tabak",
-  "vapur",
-  "yılan",
-];
-const SEVIYE_2 = [
-  "bayrak",
-  "ceylan",
-  "çardak",
-  "defter",
-  "fincan",
-  "gömlek",
-  "harita",
-  "kaplan",
-  "leylek",
-  "mantar",
-  "peynir",
-  "rüzgar",
-  "sandık",
-  "şelale",
-  "tavşan",
-  "yaprak",
-  "zeytin",
-  "bakkal",
-  "dükkan",
-  "fındık",
-];
-const SEVIYE_3 = [
-  "tencere",
-  "pencere",
-  "karınca",
-  "kelebek",
-  "kestane",
-  "papatya",
-  "şeftali",
-  "fasulye",
-  "bezelye",
-  "çimento",
-  "ıspanak",
-  "palyaço",
-  "şemsiye",
-  "fabrika",
-  "kanarya",
-  "testere",
-  "domates",
-  "kereviz",
-  "enginar",
-  "makarna",
-];
-const SEVIYE_4 = [
-  "portakal",
-  "sandalye",
-  "çikolata",
-  "pırlanta",
-  "pantolon",
-  "merdiven",
-  "sardunya",
-  "mercimek",
-  "barbunya",
-  "şempanze",
-  "flamingo",
-  "porselen",
-  "karanfil",
-  "sarımsak",
-  "gergedan",
-  "akvaryum",
-  "orkestra",
-  "gramofon",
-  "teleskop",
-  "bisiklet",
-];
-const SEVIYE_5 = [
-  "mandalina",
-  "kertenkele",
-  "helikopter",
-  "televizyon",
-  "üniversite",
-  "tarantula",
-  "orangutan",
-  "mikroskop",
-  "vantilatör",
-  "kalorifer",
-  "enstrüman",
-  "hamburger",
-  "matematik",
-  "olimpiyat",
-  "ansiklopedi",
-  "viyolonsel",
-  "kafeterya",
-  "jeneratör",
-  "laboratuvar",
-  "astronomi",
-];
-
-const LEVELS = [
-  { id: 1, name: "5 Harfli Kelimeler", pool: SEVIYE_1, points: 5 },
-  { id: 2, name: "6 Harfli Kelimeler", pool: SEVIYE_2, points: 10 },
-  { id: 3, name: "7 Harfli Kelimeler", pool: SEVIYE_3, points: 15 },
-  { id: 4, name: "8 Harfli Kelimeler", pool: SEVIYE_4, points: 20 },
-  { id: 5, name: "8+ Harfli Kelimeler", pool: SEVIYE_5, points: 25 },
-];
-
-const MAX_TIME = 30;
-const WORDS_PER_LEVEL = 5;
-
-// YARDIMCI FONKSİYONLAR (Orijinal yapı)
-const toLowerTR = (s: string) => {
-  return s.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase();
-};
+// Türkçe büyük/küçük harf yardımcıları
+const toLowerTR = (s: string) =>
+  s.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase();
 
 const toUpperTR = (ch: string) => {
   if (ch === "i") return "İ";
@@ -144,148 +27,135 @@ const toUpperTR = (ch: string) => {
   return ch.toUpperCase();
 };
 
-const shuffleLetters = (word: string) => {
-  const chars = Array.from(word);
-  if (chars.length < 2) return chars;
-  let attempt = 0;
-  let shuffled;
-  do {
-    shuffled = chars.slice();
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    attempt++;
-  } while (shuffled.join("") === chars.join("") && attempt < 12);
-  return shuffled;
-};
+type GamePhase = "playing" | "levelUp" | "gameOver";
 
 export default function SonSaniyeScreen() {
-  // STATE YÖNETİMİ
+  const { addScore } = useScores();
+  const { colors } = useTheme();
+
+  const [phase, setPhase] = useState<GamePhase>("playing");
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
   const [score, setScore] = useState(0);
   const [levelIndex, setLevelIndex] = useState(0);
   const [levelSolved, setLevelSolved] = useState(0);
   const [usedInLevel, setUsedInLevel] = useState<string[]>([]);
-
   const [targetWord, setTargetWord] = useState("");
-  const [scrambledWord, setScrambledWord] = useState<string[]>([]);
+  const [scrambled, setScrambled] = useState<string[]>([]);
   const [input, setInput] = useState("");
-
-  const [gameOver, setGameOver] = useState(false);
-  const [victory, setVictory] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [isVictory, setIsVictory] = useState(false);
+  const [earnedXP, setEarnedXP] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { addScore } = useScores();
-  const submittedScoreRef = useRef(false);
+  const submittedRef = useRef(false);
+  const scoreRef = useRef(0); // Skor ref'i — gameOver anında güncel değeri yakala
 
-  useEffect(() => {
-    startGame();
-    return () => stopTimer();
-  }, []);
-
-  useEffect(() => {
-    if (timeLeft <= 0 && !gameOver) {
-      handleEndGame(false);
-    }
-  }, [timeLeft]);
-
-  const stopTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-  };
-
+  // ─── OYUN BAŞLAT ────────────────────────────────────────────
   const startGame = () => {
-    stopTimer();
+    if (timerRef.current) clearInterval(timerRef.current);
+    submittedRef.current = false;
+    scoreRef.current = 0;
+    setPhase("playing");
     setTimeLeft(MAX_TIME);
     setScore(0);
     setLevelIndex(0);
     setLevelSolved(0);
     setUsedInLevel([]);
-    setGameOver(false);
-    setVictory(false);
     setFeedback("");
-    submittedScoreRef.current = false;
-
-    // İlk kelimeyi yükle
-    loadNextWord(0, []);
+    setEarnedXP(0);
+    loadWord(0, []);
 
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current!);
+          endGame(false);
+          return 0;
+        }
+        return t - 1;
+      });
     }, 1000);
   };
 
-  const loadNextWord = (
-    currentLevelIdx: number,
-    currentUsedWords: string[],
-  ) => {
-    const pool = LEVELS[currentLevelIdx].pool;
-    const available = pool.filter((w) => !currentUsedWords.includes(w));
+  useEffect(() => {
+    startGame();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  // ─── KELİME YÜKLE ───────────────────────────────────────────
+  const loadWord = (lvlIdx: number, used: string[]) => {
+    const pool = LEVELS[lvlIdx].pool;
+    const available = pool.filter((w) => !used.includes(w));
     const candidates = available.length > 0 ? available : pool;
-
-    let next;
-    do {
-      next = candidates[Math.floor(Math.random() * candidates.length)];
-    } while (next === targetWord && candidates.length > 1);
-
+    const next = candidates[Math.floor(Math.random() * candidates.length)];
     setTargetWord(next);
-    setScrambledWord(shuffleLetters(next));
+    setScrambled(shuffleLetters(next));
     setInput("");
   };
 
-  const handleEndGame = (isVictory: boolean) => {
-    setGameOver(true);
-    setVictory(isVictory);
-    stopTimer();
+  // ─── OYUNU BİTİR ────────────────────────────────────────────
+  const endGame = (victory: boolean) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setIsVictory(victory);
+    setPhase("gameOver");
 
-    if (!submittedScoreRef.current) {
-      submittedScoreRef.current = true;
-      addScore({
-        game: "sonsaniye",
-        score: score, // Skor AuthContext üzerinden veritabanına gidip XP kazandıracak
-        label: "points",
-      });
+    if (!submittedRef.current) {
+      submittedRef.current = true;
+      const finalScore = scoreRef.current;
+      addScore({ game: "sonsaniye", score: finalScore, label: "points" });
+
+      // XP tahmini göster (gerçek XP Supabase'den geliyor ama feedback için)
+      const xp =
+        finalScore >= 375
+          ? 100
+          : finalScore >= 300
+            ? 85
+            : finalScore >= 225
+              ? 70
+              : finalScore >= 150
+                ? 50
+                : finalScore >= 75
+                  ? 35
+                  : 20;
+      setEarnedXP(xp);
     }
   };
 
+  // ─── CEVAP GÖNDER ───────────────────────────────────────────
   const submitWord = () => {
-    if (!input.trim()) return;
-
+    if (!input.trim() || phase !== "playing") return;
     const guess = toLowerTR(input.trim());
     const target = toLowerTR(targetWord);
 
     if (guess === target) {
-      const currentLevel = LEVELS[levelIndex];
-      const pts = currentLevel.points;
-
-      const newScore = score + pts;
+      const pts = LEVELS[levelIndex].points;
+      const newScore = scoreRef.current + pts;
+      scoreRef.current = newScore;
       setScore(newScore);
-      setTimeLeft((prev) => Math.min(prev + 5, 99)); // +5 Saniye
+      setTimeLeft((t) => Math.min(t + 5, 99));
 
-      const newLevelSolved = levelSolved + 1;
-      const newUsedInLevel = [...usedInLevel, targetWord];
+      const newSolved = levelSolved + 1;
+      const newUsed = [...usedInLevel, targetWord];
 
-      setFeedback(`DOĞRU! +${pts} Puan, +5 Saniye`);
-
-      if (newLevelSolved >= WORDS_PER_LEVEL) {
-        // Seviye Atladı
+      if (newSolved >= WORDS_PER_LEVEL) {
         if (levelIndex >= LEVELS.length - 1) {
-          // Oyunu Bitirdi (Zafer)
-          handleEndGame(true);
+          setFeedback(`🎉 +${pts} Puan! Tüm seviyeler tamam!`);
+          setTimeout(() => endGame(true), 800);
         } else {
-          // Sonraki Seviyeye Geç
           const nextIdx = levelIndex + 1;
           setLevelIndex(nextIdx);
           setLevelSolved(0);
           setUsedInLevel([]);
-          loadNextWord(nextIdx, []);
-          setFeedback(`✨ SEVİYE ATLANDI: ${LEVELS[nextIdx].name} ✨`);
+          setFeedback(`✨ SEVİYE ${nextIdx + 1}! +${pts} Puan`);
+          loadWord(nextIdx, []);
         }
       } else {
-        // Aynı seviyede devam
-        setLevelSolved(newLevelSolved);
-        setUsedInLevel(newUsedInLevel);
-        loadNextWord(levelIndex, newUsedInLevel);
+        setLevelSolved(newSolved);
+        setUsedInLevel(newUsed);
+        setFeedback(`DOĞRU! +${pts} Puan, +5 Saniye`);
+        loadWord(levelIndex, newUsed);
       }
     } else {
       setFeedback("YANLIŞ — Tekrar Dene");
@@ -293,15 +163,69 @@ export default function SonSaniyeScreen() {
     }
   };
 
+  // ─── PAS GEÇ ────────────────────────────────────────────────
   const passWord = () => {
-    setScore((prev) => Math.max(0, prev - 5)); // -5 Puan cezası
-    setFeedback(`Pas Geçildi: ${toUpperTR(targetWord)} (-5 Puan)`);
-    setUsedInLevel((prev) => [...prev, targetWord]);
-    loadNextWord(levelIndex, [...usedInLevel, targetWord]);
+    const newScore = Math.max(0, scoreRef.current - 5);
+    scoreRef.current = newScore;
+    setScore(newScore);
+    const newUsed = [...usedInLevel, targetWord];
+    setUsedInLevel(newUsed);
+    setFeedback(`Pas: ${targetWord.toUpperCase()} (-5 Puan)`);
+    loadWord(levelIndex, newUsed);
   };
 
+  // ─── OYUN SONU EKRANI ───────────────────────────────────────
+  if (phase === "gameOver") {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
+        <View style={styles.resultBox}>
+          {/* İkon */}
+          <Text style={styles.resultEmoji}>{isVictory ? "🏆" : "⏱"}</Text>
+
+          {/* Başlık */}
+          <Text style={styles.resultTitle}>
+            {isVictory ? "MÜKEMMEL!" : "SÜRE BİTTİ!"}
+          </Text>
+          <Text style={styles.resultSub}>
+            {isVictory ? "Tüm seviyeleri tamamladın!" : "Son Saniye Oyunu"}
+          </Text>
+
+          {/* Skor kutusu */}
+          <View style={styles.scoreBox}>
+            <Text style={styles.scoreBoxLabel}>TOPLAM SKOR</Text>
+            <Text style={styles.scoreBoxValue}>{score}</Text>
+          </View>
+
+          {/* XP kazanıldı */}
+          <View style={styles.xpBox}>
+            <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
+          </View>
+
+          {/* Seviye bilgisi */}
+          <Text style={styles.levelReached}>
+            Ulaşılan Seviye: {levelIndex + 1} / {LEVELS.length}
+          </Text>
+
+          {/* Butonlar */}
+          <TouchableOpacity style={styles.btnPrimary} onPress={startGame}>
+            <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btnSecondary}
+            onPress={() => router.replace("/(tabs)")}
+          >
+            <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ─── OYUN EKRANI ────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.brand}>
           <View style={styles.dot} />
@@ -313,90 +237,82 @@ export default function SonSaniyeScreen() {
         </View>
       </View>
 
-      {!gameOver ? (
-        <>
-          <View style={styles.timerSection}>
-            <Text style={[styles.timer, timeLeft <= 5 && styles.timerDanger]}>
-              {Math.max(0, timeLeft)}
-            </Text>
-          </View>
+      {/* Timer */}
+      <View style={styles.timerSection}>
+        <Text style={[styles.timer, timeLeft <= 5 && styles.timerDanger]}>
+          {Math.max(0, timeLeft)}
+        </Text>
+      </View>
 
-          <View style={styles.levelBar}>
-            <View>
-              <Text style={styles.levelName}>
-                Seviye {LEVELS[levelIndex].id} — {LEVELS[levelIndex].name}
-              </Text>
-              <Text style={styles.levelProgress}>
-                <Text style={styles.levelProgressBold}>{levelSolved}</Text> /{" "}
-                {WORDS_PER_LEVEL}
-              </Text>
-            </View>
-            <View style={styles.levelDots}>
-              {Array.from({ length: WORDS_PER_LEVEL }).map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.ldot,
-                    i < levelSolved && styles.ldotFilled,
-                    i === levelSolved && styles.ldotCurrent,
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.scramble}>
-            {scrambledWord.map((ch, i) => (
-              <View key={i} style={styles.letterBox}>
-                <Text style={styles.letterText}>{toUpperTR(ch)}</Text>
-              </View>
-            ))}
-          </View>
-
-          <TextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            placeholder="Kelimeyi yaz..."
-            placeholderTextColor="#7a7a85"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onSubmitEditing={submitWord}
-          />
-
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.btnPass} onPress={passWord}>
-              <Text style={styles.btnPassText}>PAS (-5)</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btnSubmit} onPress={submitWord}>
-              <Text style={styles.btnSubmitText}>ONAYLA</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text
-            style={[
-              styles.feedback,
-              feedback.includes("YANLIŞ")
-                ? styles.feedbackWrong
-                : styles.feedbackCorrect,
-            ]}
-          >
-            {feedback}
+      {/* Seviye Barı */}
+      <View style={styles.levelBar}>
+        <View>
+          <Text style={styles.levelName}>
+            Seviye {LEVELS[levelIndex].id} — {LEVELS[levelIndex].name}
           </Text>
-        </>
-      ) : (
-        <View style={styles.gameOverBox}>
-          <Text style={styles.gameOverTitle}>
-            {victory ? "TÜM SEVİYELER TAMAM! 🎉" : "SÜRE BİTTİ!"}
+          <Text style={styles.levelProgress}>
+            <Text style={styles.levelProgressBold}>{levelSolved}</Text> /{" "}
+            {WORDS_PER_LEVEL}
           </Text>
-          <Text style={styles.gameOverSub}>Toplam Skorun</Text>
-          <Text style={styles.finalScore}>{score}</Text>
-          <TouchableOpacity style={styles.btnSubmit} onPress={startGame}>
-            <Text style={styles.btnSubmitText}>YENİDEN OYNA</Text>
-          </TouchableOpacity>
         </View>
-      )}
+        <View style={styles.levelDots}>
+          {Array.from({ length: WORDS_PER_LEVEL }).map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.ldot,
+                i < levelSolved && styles.ldotFilled,
+                i === levelSolved && styles.ldotCurrent,
+              ]}
+            />
+          ))}
+        </View>
+      </View>
 
+      {/* Harfler */}
+      <View style={styles.scramble}>
+        {scrambled.map((ch, i) => (
+          <View key={i} style={styles.letterBox}>
+            <Text style={styles.letterText}>{toUpperTR(ch)}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Input */}
+      <TextInput
+        style={styles.input}
+        value={input}
+        onChangeText={setInput}
+        placeholder="Kelimeyi yaz..."
+        placeholderTextColor="#7a7a85"
+        autoCapitalize="none"
+        autoCorrect={false}
+        onSubmitEditing={submitWord}
+      />
+
+      {/* Butonlar */}
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.btnPass} onPress={passWord}>
+          <Text style={styles.btnPassText}>PAS (-5)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.btnSubmit} onPress={submitWord}>
+          <Text style={styles.btnSubmitText}>ONAYLA</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Feedback */}
+      <Text
+        style={[
+          styles.feedback,
+          feedback.includes("YANLIŞ")
+            ? styles.feedbackWrong
+            : styles.feedbackCorrect,
+        ]}
+      >
+        {feedback}
+      </Text>
+
+      {/* Geri */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backText}>Geri Dön</Text>
       </TouchableOpacity>
@@ -405,22 +321,16 @@ export default function SonSaniyeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a0a0c", padding: 24 },
+  container: { flex: 1, padding: 24 },
+
+  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 28,
   },
   brand: { flexDirection: "row", alignItems: "center", gap: 10 },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#c8ff3e",
-    shadowColor: "#c8ff3e",
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-  },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#c8ff3e" },
   brandText: {
     fontWeight: "800",
     fontSize: 13,
@@ -435,6 +345,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   scoreValue: { fontSize: 24, fontWeight: "800", color: "#e7e7ea" },
+
+  // Timer
   timerSection: { alignItems: "center", marginBottom: 20 },
   timer: {
     fontSize: 80,
@@ -444,6 +356,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 20,
   },
   timerDanger: { color: "#ff3b5c", textShadowColor: "#ff3b5c" },
+
+  // Level bar
   levelBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -474,19 +388,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#26262d",
   },
-  ldotFilled: {
-    backgroundColor: "#c8ff3e",
-    borderColor: "#c8ff3e",
-    shadowColor: "#c8ff3e",
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-  },
-  ldotCurrent: {
-    borderColor: "#c8ff3e",
-    shadowColor: "#c8ff3e",
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-  },
+  ldotFilled: { backgroundColor: "#c8ff3e", borderColor: "#c8ff3e" },
+  ldotCurrent: { borderColor: "#c8ff3e" },
+
+  // Scramble
   scramble: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -506,6 +411,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   letterText: { fontSize: 22, fontWeight: "700", color: "#e7e7ea" },
+
+  // Input & Actions
   input: {
     backgroundColor: "#0a0a0c",
     borderWidth: 1,
@@ -540,9 +447,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
-    shadowColor: "#c8ff3e",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
   },
   btnSubmitText: {
     color: "#0a0a0c",
@@ -550,6 +454,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 1,
   },
+
+  // Feedback
   feedback: {
     textAlign: "center",
     fontSize: 13,
@@ -559,28 +465,8 @@ const styles = StyleSheet.create({
   },
   feedbackCorrect: { color: "#5cffa8" },
   feedbackWrong: { color: "#ff3b5c" },
-  gameOverBox: {
-    backgroundColor: "#111114",
-    padding: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#26262d",
-  },
-  gameOverTitle: {
-    color: "#c8ff3e",
-    fontSize: 24,
-    fontWeight: "900",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  gameOverSub: { color: "#7a7a85", fontSize: 14, marginBottom: 20 },
-  finalScore: {
-    fontSize: 64,
-    fontWeight: "900",
-    color: "#c8ff3e",
-    marginBottom: 30,
-  },
+
+  // Back
   backButton: {
     marginTop: "auto",
     backgroundColor: "#18181d",
@@ -591,4 +477,72 @@ const styles = StyleSheet.create({
     borderColor: "#26262d",
   },
   backText: { color: "#7a7a85", fontWeight: "700" },
+
+  // ─── OYUN SONU ───────────────────────────────────────────────
+  resultBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  resultEmoji: { fontSize: 72, marginBottom: 16 },
+  resultTitle: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: "#c8ff3e",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  resultSub: { fontSize: 14, color: "#7a7a85", marginBottom: 28 },
+  scoreBox: {
+    backgroundColor: "#111114",
+    borderWidth: 1,
+    borderColor: "#26262d",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    marginBottom: 16,
+    width: "100%",
+  },
+  scoreBoxLabel: {
+    fontSize: 11,
+    color: "#7a7a85",
+    letterSpacing: 2,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  scoreBoxValue: { fontSize: 56, fontWeight: "900", color: "#c8ff3e" },
+  xpBox: {
+    backgroundColor: "#1a2a0a",
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  xpText: { color: "#5cffa8", fontSize: 16, fontWeight: "800" },
+  levelReached: { color: "#7a7a85", fontSize: 13, marginBottom: 28 },
+  btnPrimary: {
+    backgroundColor: "#c8ff3e",
+    padding: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 12,
+  },
+  btnPrimaryText: {
+    color: "#0a0a0c",
+    fontWeight: "900",
+    fontSize: 16,
+    letterSpacing: 2,
+  },
+  btnSecondary: {
+    backgroundColor: "#18181d",
+    padding: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#26262d",
+  },
+  btnSecondaryText: { color: "#7a7a85", fontWeight: "700", fontSize: 14 },
 });
