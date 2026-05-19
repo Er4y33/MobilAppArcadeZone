@@ -1,43 +1,100 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function SettingsScreen() {
   const [music, setMusic] = useState(true);
   const [sound, setSound] = useState(true);
   const [notifications, setNotifications] = useState(false);
 
-  // AuthContext'ten çıkış yapma fonksiyonunu alıyoruz
   const { signOut } = useAuth();
+  const { mode, colors, toggleTheme } = useTheme();
+  const isDark = mode === "dark";
 
   const handleSignOut = async () => {
-    await signOut(); // Supabase'den ve telefon hafızasından oturumu siler
-    router.replace("/(auth)/login"); // Login ekranına geri şutlar
+    await signOut();
+    router.replace("/(auth)/login");
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Ayarlar</Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <Text style={[styles.title, { color: colors.text }]}>Ayarlar</Text>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Müzik</Text>
-        <Switch value={music} onValueChange={setMusic} />
+      {/* Tema Toggle */}
+      <View style={[styles.row, { backgroundColor: colors.surface }]}>
+        <View style={styles.rowLeft}>
+          <Ionicons
+            name={isDark ? "moon" : "sunny"}
+            size={22}
+            color={colors.accent}
+          />
+          <Text style={[styles.label, { color: colors.text }]}>
+            {isDark ? "Karanlık Tema" : "Aydınlık Tema"}
+          </Text>
+        </View>
+        <Switch
+          value={isDark}
+          onValueChange={toggleTheme}
+          trackColor={{ false: "#D1D5DB", true: colors.primary }}
+          thumbColor="#FFFFFF"
+        />
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Ses Efektleri</Text>
-        <Switch value={sound} onValueChange={setSound} />
+      {/* Müzik */}
+      <View style={[styles.row, { backgroundColor: colors.surface }]}>
+        <View style={styles.rowLeft}>
+          <Ionicons name="musical-notes" size={22} color={colors.info} />
+          <Text style={[styles.label, { color: colors.text }]}>Müzik</Text>
+        </View>
+        <Switch
+          value={music}
+          onValueChange={setMusic}
+          trackColor={{ false: "#D1D5DB", true: colors.primary }}
+        />
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Bildirimler</Text>
-        <Switch value={notifications} onValueChange={setNotifications} />
+      {/* Ses Efektleri */}
+      <View style={[styles.row, { backgroundColor: colors.surface }]}>
+        <View style={styles.rowLeft}>
+          <Ionicons name="volume-high" size={22} color={colors.success} />
+          <Text style={[styles.label, { color: colors.text }]}>
+            Ses Efektleri
+          </Text>
+        </View>
+        <Switch
+          value={sound}
+          onValueChange={setSound}
+          trackColor={{ false: "#D1D5DB", true: colors.primary }}
+        />
       </View>
 
-      {/* Çıkış Yap Butonu */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+      {/* Bildirimler */}
+      <View style={[styles.row, { backgroundColor: colors.surface }]}>
+        <View style={styles.rowLeft}>
+          <Ionicons name="notifications" size={22} color={colors.primaryAlt} />
+          <Text style={[styles.label, { color: colors.text }]}>
+            Bildirimler
+          </Text>
+        </View>
+        <Switch
+          value={notifications}
+          onValueChange={setNotifications}
+          trackColor={{ false: "#D1D5DB", true: colors.primary }}
+        />
+      </View>
+
+      {/* Çıkış Yap */}
+      <TouchableOpacity
+        style={[styles.logoutButton, { backgroundColor: colors.danger }]}
+        onPress={handleSignOut}
+      >
+        <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
         <Text style={styles.logoutText}>Hesaptan Çıkış Yap</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -47,17 +104,14 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B1020",
     padding: 20,
   },
   title: {
-    color: "#FFFFFF",
     fontSize: 28,
     fontWeight: "800",
     marginBottom: 20,
   },
   row: {
-    backgroundColor: "#151B2E",
     borderRadius: 16,
     padding: 18,
     marginBottom: 14,
@@ -65,17 +119,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  rowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   label: {
-    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
   logoutButton: {
     marginTop: 20,
-    backgroundColor: "#EF4444", // Kırmızı çıkış butonu rengi
     padding: 16,
     borderRadius: 16,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
   },
   logoutText: {
     color: "#FFFFFF",

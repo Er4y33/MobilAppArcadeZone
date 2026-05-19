@@ -2,6 +2,7 @@ import { Session, User } from "@supabase/supabase-js";
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -9,11 +10,13 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabase";
 
-type PlayerProfile = {
+export type PlayerProfile = {
+  id: string;
   username: string;
   level: number;
   coins: number;
-  xp: number; // XP eklendi
+  xp: number;
+  avatar_url: string | null;
 };
 
 type AuthContextType = {
@@ -21,7 +24,6 @@ type AuthContextType = {
   user: User | null;
   profile: PlayerProfile | null;
   loading: boolean;
-  fetchProfile: () => Promise<void>;
   signUp: (
     email: string,
     password: string,
@@ -32,6 +34,7 @@ type AuthContextType = {
     password: string,
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,41 +44,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId?: string) => {
-    const id = userId || session?.user?.id;
-    if (!id) return;
-
-    const { data } = await supabase
+  // Profili Supabase'den çek
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
       .from("players")
-      .select("username, level, coins, xp") // Veritabanından XP'yi de istiyoruz
-      .eq("id", id)
+      .select("id, username, level, coins, xp, avatar_url")
+      .eq("id", userId)
       .single();
 
-    if (data) {
-      setProfile(data);
+    if (error) {
+      console.error("Profil çekilemedi:", error.message);
+      setProfile(null);
+    } else if (data) {
+      setProfile(data as PlayerProfile);
     }
-  };
+  }, []);
+
+  // Dışarıdan çağrılabilir refresh (oyun bitince XP güncellensin diye)
+  const refreshProfile = useCallback(async () => {
+    if (session?.user) {
+      await fetchProfile(session.user.id);
+    }
+  }, [session, fetchProfile]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
+      if (session?.user) {
+        fetchProfile(session.user.id).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      if (newSession?.user) {
+        fetchProfile(newSession.user.id);
       } else {
         setProfile(null);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchProfile]);
 
   const signUp = async (email: string, password: string, username: string) => {
     const { error } = await supabase.auth.signUp({
@@ -96,7 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setProfile(null);
   };
 
   const value = useMemo(
@@ -105,12 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       profile,
       loading,
-      fetchProfile,
       signUp,
       signIn,
       signOut,
+      refreshProfile,
     }),
-    [session, profile, loading],
+    [session, profile, loading, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
