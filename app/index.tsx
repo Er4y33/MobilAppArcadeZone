@@ -1,14 +1,24 @@
 import { Redirect } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { isOnboardingDone } from "./onboarding";
 
 export default function Index() {
   const { session, loading } = useAuth();
   const { colors } = useTheme();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    isOnboardingDone().then((done) => {
+      setOnboardingDone(done);
+      setOnboardingChecked(true);
+    });
+  }, []);
+
+  if (loading || !onboardingChecked) {
     return (
       <View
         style={{
@@ -23,6 +33,12 @@ export default function Index() {
     );
   }
 
+  // Onboarding hiç yapılmamışsa göster
+  if (!onboardingDone) {
+    return <Redirect href="/onboarding" />;
+  }
+
+  // Onboarding yapılmış, auth durumuna göre yönlendir
   if (session) {
     return <Redirect href="/(tabs)" />;
   }

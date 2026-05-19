@@ -5,7 +5,6 @@ import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-
 export default function SettingsScreen() {
   const [music, setMusic] = useState(true);
   const [sound, setSound] = useState(true);
@@ -88,7 +87,17 @@ export default function SettingsScreen() {
           trackColor={{ false: "#D1D5DB", true: colors.primary }}
         />
       </View>
-
+      {/* Hakkinda */}
+      <TouchableOpacity
+        style={[styles.row, { backgroundColor: colors.surface }]}
+        onPress={() => router.push("/about")}
+      >
+        <View style={styles.rowLeft}>
+          <Ionicons name="information-circle" size={22} color={colors.info} />
+          <Text style={[styles.label, { color: colors.text }]}>Hakkinda</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
       {/* Çıkış Yap */}
       <TouchableOpacity
         style={[styles.logoutButton, { backgroundColor: colors.danger }]}

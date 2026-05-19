@@ -11,11 +11,12 @@ export default function RootLayout() {
         <ScoreProvider>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
+            <Stack.Screen name="onboarding" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen
               name="game/[id]"
-              options={{ headerShown: true, title: "Oyun Detayı" }}
+              options={{ headerShown: true, title: "Oyun Detayi" }}
             />
             <Stack.Screen
               name="game/play/reaction"
@@ -28,6 +29,10 @@ export default function RootLayout() {
             <Stack.Screen
               name="game/play/sonsaniye"
               options={{ headerShown: true, title: "Son Saniye" }}
+            />
+            <Stack.Screen
+              name="about"
+              options={{ headerShown: true, title: "Hakkinda" }}
             />
           </Stack>
         </ScoreProvider>
