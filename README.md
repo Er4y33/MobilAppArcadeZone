@@ -1,50 +1,126 @@
-# Welcome to your Expo app 👋
+# 🎮 ArcadeZone — Mobil Oyun Platformu
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+ArcadeZone, React Native ile geliştirilmiş, üç farklı mini oyun içeren tam kapsamlı (full-stack) bir mobil oyun platformudur.
 
-## Get started
+## 📋 Proje Hakkında
 
-1. Install dependencies
+Bu proje, **Mobil Uygulama Geliştirme II** ve **Veri Tabanı Uygulamaları** derslerinin ortak final projesidir.
 
-   ```bash
-   npm install
-   ```
+- **Frontend:** React Native (Expo) — Melih Atahan Akgün
+- **Backend:** NestJS + TypeORM + Supabase — Eray
 
-2. Start the app
+## 🏗️ Mimari
 
-   ```bash
-   npx expo start
-   ```
+```
+MobilAppArcadeZone/          ← Frontend (React Native)
+  ├── app/
+  │   ├── (auth)/            ← Login, Signup ekranları
+  │   ├── (tabs)/            ← Ana Menü, Oyunlar, Liderboard, Profil, Ayarlar
+  │   └── game/play/         ← Reaction Tap, Memory Match, Son Saniye
+  ├── context/
+  │   ├── AuthContext.tsx    ← Supabase Auth yönetimi
+  │   ├── ScoreContext.tsx   ← Skor kayıt ve çekme
+  │   └── ThemeContext.tsx   ← Karanlık/Aydınlık tema
+  └── lib/
+      └── supabase.ts        ← Supabase client bağlantısı
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+BackEndArcadeZone/           ← Backend (NestJS)
+  ├── src/
+  │   ├── auth/              ← JWT, Bcrypt, Guards, Strategies
+  │   ├── players/           ← Oyuncu CRUD
+  │   ├── games/             ← Oyun CRUD (admin korumalı silme)
+  │   └── game-sessions/     ← Oturum CRUD
+  └── database/              ← Supabase SQL şemaları
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🎮 Oyunlar
 
-## Learn more
+| Oyun | Açıklama | Skor Mantığı |
+|------|----------|-------------|
+| ⚡ Reaction Tap | Ekranda çıkan hedefe hızlı dokun | Düşük ms = iyi |
+| 🃏 Memory Match | Kart eşleştirme oyunu | Az hamle = iyi |
+| 🔤 Son Saniye | Karışık harflerden kelime bul | Yüksek puan = iyi |
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🛠️ Teknoloji Yığını
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+**Frontend:**
+- React Native (Expo Router)
+- TypeScript
+- Supabase JS Client
+- AsyncStorage
 
-## Join the community
+**Backend:**
+- NestJS + TypeScript
+- TypeORM
+- PostgreSQL (Supabase Cloud)
+- JWT (Access + Refresh Token)
+- Bcrypt
+- Passport.js (LocalStrategy + JwtStrategy)
 
-Join our community of developers creating universal apps.
+## 🚀 Kurulum
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Frontend (MobilAppArcadeZone)
+
+```bash
+git clone https://github.com/MelihAtahanAkgun/MobilAppArcadeZone.git
+cd MobilAppArcadeZone
+npm install
+```
+
+`.env` dosyasını oluştur:
+```
+EXPO_PUBLIC_SUPABASE_URL=https://fqkywfhkzwgoinhjcfoc.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+```
+
+```bash
+npx expo start
+```
+
+### Backend (BackEndArcadeZone)
+
+```bash
+git clone https://github.com/Er4y33/BackEndArcadeZone.git
+cd BackEndArcadeZone
+npm install
+```
+
+`.env` dosyasını oluştur:
+```
+DATABASE_URL=postgresql://postgres:[SIFRE]@aws-1-eu-central-1.pooler.supabase.com:5432/postgres
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=3600s
+JWT_REFRESH_SECRET=your_refresh_secret
+JWT_REFRESH_EXPIRES_IN=7d
+PORT=3000
+```
+
+```bash
+npm run start:dev
+```
+
+## 🔐 Authentication
+
+| Endpoint | Method | Açıklama |
+|----------|--------|----------|
+| `/auth/register` | POST | Yeni kullanıcı kaydı |
+| `/auth/login` | POST | Giriş, JWT token döner |
+| `/auth/profile` | GET | Profil (JWT gerekli) |
+| `/auth/logout` | POST | Çıkış |
+| `/auth/refresh` | POST | Token yenileme |
+
+## 🗄️ Veritabanı Şeması
+
+```
+players          → Oyuncu profilleri (UUID, username, email, level, xp, coins)
+games            → Oyun tanımları (reaction, memory, sonsaniye)
+game_sessions    → Oyun skorları (player_id, game_id, score, played_at)
+leaderboard_view → En iyi skorları hesaplayan SQL View
+```
+
+## 👥 Geliştiriciler
+
+| İsim | Rol | GitHub |
+|------|-----|--------|
+| Eray | Backend & Veritabanı | [@Er4y33](https://github.com/Er4y33) |
+| Melih Atahan Akgün | Frontend & UI/UX | [@MelihAtahanAkgun](https://github.com/MelihAtahanAkgun) |
