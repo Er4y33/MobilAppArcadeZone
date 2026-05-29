@@ -1,15 +1,12 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-export default function SettingsScreen() {
-  const [music, setMusic] = useState(true);
-  const [sound, setSound] = useState(true);
-  const [notifications, setNotifications] = useState(false);
 
+export default function SettingsScreen() {
   const { signOut } = useAuth();
   const { mode, colors, toggleTheme } = useTheme();
   const isDark = mode === "dark";
@@ -45,48 +42,6 @@ export default function SettingsScreen() {
         />
       </View>
 
-      {/* Müzik */}
-      <View style={[styles.row, { backgroundColor: colors.surface }]}>
-        <View style={styles.rowLeft}>
-          <Ionicons name="musical-notes" size={22} color={colors.info} />
-          <Text style={[styles.label, { color: colors.text }]}>Müzik</Text>
-        </View>
-        <Switch
-          value={music}
-          onValueChange={setMusic}
-          trackColor={{ false: "#D1D5DB", true: colors.primary }}
-        />
-      </View>
-
-      {/* Ses Efektleri */}
-      <View style={[styles.row, { backgroundColor: colors.surface }]}>
-        <View style={styles.rowLeft}>
-          <Ionicons name="volume-high" size={22} color={colors.success} />
-          <Text style={[styles.label, { color: colors.text }]}>
-            Ses Efektleri
-          </Text>
-        </View>
-        <Switch
-          value={sound}
-          onValueChange={setSound}
-          trackColor={{ false: "#D1D5DB", true: colors.primary }}
-        />
-      </View>
-
-      {/* Bildirimler */}
-      <View style={[styles.row, { backgroundColor: colors.surface }]}>
-        <View style={styles.rowLeft}>
-          <Ionicons name="notifications" size={22} color={colors.primaryAlt} />
-          <Text style={[styles.label, { color: colors.text }]}>
-            Bildirimler
-          </Text>
-        </View>
-        <Switch
-          value={notifications}
-          onValueChange={setNotifications}
-          trackColor={{ false: "#D1D5DB", true: colors.primary }}
-        />
-      </View>
       {/* Hakkinda */}
       <TouchableOpacity
         style={[styles.row, { backgroundColor: colors.surface }]}
@@ -98,6 +53,21 @@ export default function SettingsScreen() {
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </TouchableOpacity>
+
+      {/* Backend API Testi */}
+      <TouchableOpacity
+        style={[styles.row, { backgroundColor: colors.surface }]}
+        onPress={() => router.push("/backend")}
+      >
+        <View style={styles.rowLeft}>
+          <Ionicons name="server-outline" size={22} color={colors.accent} />
+          <Text style={[styles.label, { color: colors.text }]}>
+            Backend API Testi
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+
       {/* Çıkış Yap */}
       <TouchableOpacity
         style={[styles.logoutButton, { backgroundColor: colors.danger }]}

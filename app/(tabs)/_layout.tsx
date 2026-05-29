@@ -66,6 +66,7 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="backend" options={{ href: null }} />
     </Tabs>
   );
 }
