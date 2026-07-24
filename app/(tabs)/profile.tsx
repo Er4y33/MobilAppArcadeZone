@@ -78,6 +78,8 @@ export default function ProfileScreen() {
   const reactionBest = getBestScore("reaction");
   const memoryBest = getBestScore("memory");
   const sonsaniyeBest = getBestScore("sonsaniye");
+  const mathrushBest = getBestScore("mathrush");
+  const patternBest = getBestScore("pattern");
 
   const xpProgress = getXpProgress(stats.xp);
   const xpInLevel = stats.xp % 100;
@@ -187,6 +189,24 @@ export default function ProfileScreen() {
           </Text>
           <Text style={[styles.scoreVal, { color: colors.success }]}>
             {sonsaniyeBest ? `${sonsaniyeBest.score} pts` : "-"}
+          </Text>
+        </View>
+
+        <View style={styles.scoreRow}>
+          <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
+            🔢 Sayı Avı
+          </Text>
+          <Text style={[styles.scoreVal, { color: colors.success }]}>
+            {mathrushBest ? `${mathrushBest.score} pts` : "-"}
+          </Text>
+        </View>
+
+        <View style={styles.scoreRow}>
+          <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
+            🎨 Sırayı Takip Et
+          </Text>
+          <Text style={[styles.scoreVal, { color: colors.success }]}>
+            {patternBest ? `${patternBest.score} lvl` : "-"}
           </Text>
         </View>
       </View>

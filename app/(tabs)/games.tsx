@@ -72,6 +72,43 @@ export default function GamesScreen() {
           Karışık harfli kelime çözme oyunu
         </Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.card,
+          { backgroundColor: colors.surface, borderLeftColor: colors.info },
+        ]}
+        onPress={() =>
+          router.push({
+            pathname: "/game/[id]",
+            params: { id: "mathrush", title: "Sayı Avı" },
+          })
+        }
+      >
+        <Text style={[styles.cardTitle, { color: colors.text }]}>Sayı Avı</Text>
+        <Text style={[styles.cardText, { color: colors.textMuted }]}>
+          Hızlı matematik oyunu
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.card,
+          { backgroundColor: colors.surface, borderLeftColor: colors.accent },
+        ]}
+        onPress={() =>
+          router.push({
+            pathname: "/game/[id]",
+            params: { id: "pattern", title: "Sırayı Takip Et" },
+          })
+        }
+      >
+        <Text style={[styles.cardTitle, { color: colors.text }]}>
+          Sırayı Takip Et
+        </Text>
+        <Text style={[styles.cardText, { color: colors.textMuted }]}>
+          Renk sırası hafıza oyunu
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

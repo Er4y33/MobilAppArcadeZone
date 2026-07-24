@@ -13,7 +13,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { supabase } from "../../lib/supabase";
 
-type GameKey = "reaction" | "memory" | "sonsaniye";
+type GameKey = "reaction" | "memory" | "sonsaniye" | "mathrush" | "pattern";
 
 type LeaderboardEntry = {
   game_id: string;
@@ -30,12 +30,16 @@ const GAMES: { key: GameKey; label: string }[] = [
   { key: "reaction", label: "TEPKİ" },
   { key: "memory", label: "HAFIZA" },
   { key: "sonsaniye", label: "SON SANİYE" },
+  { key: "mathrush", label: "SAYI AVI" },
+  { key: "pattern", label: "SIRAYI TAKİP ET" },
 ];
 
 const LOWER_IS_BETTER: Record<GameKey, boolean> = {
   reaction: true,
   memory: true,
   sonsaniye: false,
+  mathrush: false,
+  pattern: false,
 };
 
 export default function LeaderboardScreen() {
@@ -86,7 +90,12 @@ export default function LeaderboardScreen() {
     >
       <Text style={[styles.title, { color: colors.accent }]}>EN İYİLER</Text>
 
-      <View style={[styles.tabBar, { backgroundColor: colors.surface }]}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={[styles.tabBar, { backgroundColor: colors.surface }]}
+        contentContainerStyle={{ paddingHorizontal: 4 }}
+      >
         {GAMES.map((game) => (
           <TouchableOpacity
             key={game.key}
@@ -110,7 +119,7 @@ export default function LeaderboardScreen() {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       {loading ? (
         <View style={styles.center}>
@@ -242,10 +251,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   tab: {
-    flex: 1,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 10,
     alignItems: "center",
+    marginHorizontal: 2,
   },
   tabText: {
     fontSize: 12,

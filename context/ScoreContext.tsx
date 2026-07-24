@@ -10,7 +10,12 @@ import React, {
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 
-export type GameKey = "reaction" | "memory" | "sonsaniye";
+export type GameKey =
+  | "reaction"
+  | "memory"
+  | "sonsaniye"
+  | "mathrush"
+  | "pattern";
 
 export type ScoreItem = {
   id: string;
@@ -36,6 +41,8 @@ function mapDbRowToScoreItem(row: any): ScoreItem {
     reaction: "ms",
     memory: "moves",
     sonsaniye: "points",
+    mathrush: "points",
+    pattern: "points",
   };
 
   return {

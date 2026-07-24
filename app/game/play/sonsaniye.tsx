@@ -15,7 +15,7 @@ import {
   MAX_TIME,
   WORDS_PER_LEVEL,
   shuffleLetters,
-} from "../../data/sonsaniyeKelimeler";
+} from "../../../lib/data/sonsaniyeKelimeler";
 
 // Türkçe büyük/küçük harf yardımcıları
 const toLowerTR = (s: string) =>

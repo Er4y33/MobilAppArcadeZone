@@ -1,6 +1,6 @@
 // lib/api.ts
 // NestJS backend'ine fetch ile istek atan basit API istemcisi
-const API_URL = "http://192.168.1.196:3000"; // ← Adım 2'deki KENDİ IP'n
+const API_URL = "http://10.0.2.2:3000";
 
 async function request(path: string, options: RequestInit = {}) {
   const res = await fetch(`${API_URL}${path}`, {

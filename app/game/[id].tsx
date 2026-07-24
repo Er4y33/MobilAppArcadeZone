@@ -26,6 +26,20 @@ const GAME_INFO = {
     scoreLabel: "points",
     lowerBetter: false,
   },
+  mathrush: {
+    emoji: "🔢",
+    howTo:
+      "Ekranda beliren işlemi çöz ve doğru cevabı süre dolmadan seç! Hızlı cevap ekstra puan kazandırır.",
+    scoreLabel: "puan",
+    lowerBetter: false,
+  },
+  pattern: {
+    emoji: "🎨",
+    howTo:
+      "Yanıp sönen renk sırasını izle, sonra aynı sırayla dokun. Her doğru turda sıra bir adım uzar!",
+    scoreLabel: "seviye",
+    lowerBetter: false,
+  },
 } as const;
 
 type GameKey = keyof typeof GAME_INFO;
@@ -47,6 +61,8 @@ export default function GameDetail() {
     if (id === "reaction") router.push("/game/play/reaction");
     else if (id === "memory") router.push("/game/play/memory");
     else if (id === "sonsaniye") router.push("/game/play/sonsaniye");
+    else if (id === "mathrush") router.push("/game/play/mathrush");
+    else if (id === "pattern") router.push("/game/play/pattern");
   };
 
   return (
