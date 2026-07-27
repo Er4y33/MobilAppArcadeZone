@@ -41,6 +41,13 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity
+        style={[styles.button, { backgroundColor: colors.success }]}
+        onPress={() => router.push("./(tabs)/tasks")}
+      >
+        <Text style={styles.buttonText}>GÖREVLER</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.accent }]}
         onPress={() => router.push("/(tabs)/leaderboard")}
       >

@@ -90,36 +90,37 @@ export default function LeaderboardScreen() {
     >
       <Text style={[styles.title, { color: colors.accent }]}>EN İYİLER</Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={[styles.tabBar, { backgroundColor: colors.surface }]}
-        contentContainerStyle={{ paddingHorizontal: 4 }}
-      >
-        {GAMES.map((game) => (
-          <TouchableOpacity
-            key={game.key}
-            style={[
-              styles.tab,
-              selectedGame === game.key && { backgroundColor: colors.accent },
-            ]}
-            onPress={() => setSelectedGame(game.key)}
-          >
-            <Text
+      <View style={[styles.tabBarWrap, { backgroundColor: colors.surface }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 4 }}
+        >
+          {GAMES.map((game) => (
+            <TouchableOpacity
+              key={game.key}
               style={[
-                styles.tabText,
-                { color: colors.textMuted },
-                selectedGame === game.key && {
-                  color: colors.background,
-                  fontWeight: "900",
-                },
+                styles.tab,
+                selectedGame === game.key && { backgroundColor: colors.accent },
               ]}
+              onPress={() => setSelectedGame(game.key)}
             >
-              {game.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: colors.textMuted },
+                  selectedGame === game.key && {
+                    color: colors.background,
+                    fontWeight: "900",
+                  },
+                ]}
+              >
+                {game.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       {loading ? (
         <View style={styles.center}>
@@ -244,8 +245,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginVertical: 16,
   },
-  tabBar: {
-    flexDirection: "row",
+  tabBarWrap: {
     borderRadius: 14,
     padding: 4,
     marginBottom: 16,
