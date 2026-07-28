@@ -42,11 +42,16 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.success }]}
-        onPress={() => router.push("./(tabs)/tasks")}
+        onPress={() => router.push("/(tabs)/tasks")}
       >
         <Text style={styles.buttonText}>GÖREVLER</Text>
       </TouchableOpacity>
-
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: colors.primaryAlt }]}
+        onPress={() => router.push("./(tabs)/store")}
+      >
+        <Text style={styles.buttonText}>MAĞAZA</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.accent }]}
         onPress={() => router.push("/(tabs)/leaderboard")}

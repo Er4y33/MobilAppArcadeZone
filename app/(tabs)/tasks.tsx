@@ -1,24 +1,28 @@
 import React, { useMemo } from "react";
 import {
-    ActivityIndicator,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-    formatShortDate,
-    getDaysUntilReset,
-    getNextResetDate,
-    getWeeklyTasks,
-    getWeekStart,
-    REWARD_BY_DIFFICULTY,
-    TaskDefinition,
+  formatShortDate,
+  getDaysUntilReset,
+  getNextResetDate,
+  getWeeklyTasks,
+  getWeekStart,
+  REWARD_BY_DIFFICULTY,
+  TaskDefinition,
 } from "../../constants/tasks";
+import { useAuth } from "../../context/AuthContext";
 import { useScores } from "../../context/ScoreContext";
 import { useTheme } from "../../context/ThemeContext";
+import { supabase } from "../../lib/supabase";
 
 type TaskProgress = {
   task: TaskDefinition;
@@ -31,7 +35,10 @@ type TaskProgress = {
 export default function TasksScreen() {
   const { scores, loading, refreshScores } = useScores();
   const { colors } = useTheme();
+  const { user, refreshProfile } = useAuth();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [claimedIds, setClaimedIds] = React.useState<string[]>([]);
+  const [claimingId, setClaimingId] = React.useState<string | null>(null);
 
   const weekStart = useMemo(() => getWeekStart(), []);
   const nextReset = useMemo(() => getNextResetDate(), []);
@@ -99,14 +106,46 @@ export default function TasksScreen() {
   const completedCount = taskProgressList.filter((t) => t.completed).length;
   const totalCount = taskProgressList.length;
   const earnedCoins = taskProgressList
-    .filter((t) => t.completed)
+    .filter((t) => claimedIds.includes(t.task.id))
     .reduce((sum, t) => sum + t.reward, 0);
   const totalCoins = taskProgressList.reduce((sum, t) => sum + t.reward, 0);
+
+  const fetchClaimed = React.useCallback(async () => {
+    if (!user) return;
+    const weekStartStr = weekStart.toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("player_tasks")
+      .select("task_id")
+      .eq("player_id", user.id)
+      .eq("week_start", weekStartStr);
+    setClaimedIds((data ?? []).map((r: any) => r.task_id));
+  }, [user, weekStart]);
+
+  React.useEffect(() => {
+    fetchClaimed();
+  }, [fetchClaimed]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await refreshScores();
+    await fetchClaimed();
     setRefreshing(false);
+  };
+
+  const handleClaim = async (taskId: string, reward: number) => {
+    setClaimingId(taskId);
+    const { error } = await supabase.rpc("claim_task_reward", {
+      p_task_id: taskId,
+    });
+    setClaimingId(null);
+
+    if (error) {
+      Alert.alert("Ödül alınamadı", error.message);
+      return;
+    }
+    await fetchClaimed();
+    await refreshProfile();
+    Alert.alert("Ödül alındı!", `🪙 ${reward} coin hesabına eklendi.`);
   };
 
   const difficultyColor = (d: TaskDefinition["difficulty"]) =>
@@ -152,7 +191,7 @@ export default function TasksScreen() {
           />
         </View>
         <Text style={[styles.coinSummary, { color: colors.accent }]}>
-          🪙 {earnedCoins} / {totalCoins} coin kazanıldı
+          🪙 {earnedCoins} / {totalCoins} coin alındı
         </Text>
       </View>
 
@@ -255,6 +294,42 @@ export default function TasksScreen() {
               <Text style={[styles.taskProgress, { color: colors.textMuted }]}>
                 {item.completed ? "Tamamlandı!" : item.displayText}
               </Text>
+
+              {item.completed && (
+                <TouchableOpacity
+                  style={[
+                    styles.claimBtn,
+                    {
+                      backgroundColor: claimedIds.includes(item.task.id)
+                        ? colors.surfaceAlt
+                        : colors.accent,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  onPress={() => handleClaim(item.task.id, item.reward)}
+                  disabled={
+                    claimedIds.includes(item.task.id) ||
+                    claimingId === item.task.id
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.claimText,
+                      {
+                        color: claimedIds.includes(item.task.id)
+                          ? colors.textMuted
+                          : colors.background,
+                      },
+                    ]}
+                  >
+                    {claimingId === item.task.id
+                      ? "..."
+                      : claimedIds.includes(item.task.id)
+                        ? "✓ ÖDÜL ALINDI"
+                        : `🪙 ${item.reward} ÖDÜLÜ AL`}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))}
 
@@ -342,4 +417,13 @@ const styles = StyleSheet.create({
   taskBarBg: { height: 6, borderRadius: 3, marginBottom: 6 },
   taskBarFill: { height: 6, borderRadius: 3 },
   taskProgress: { fontSize: 12, fontWeight: "700", textAlign: "right" },
+
+  claimBtn: {
+    marginTop: 12,
+    paddingVertical: 11,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+  },
+  claimText: { fontSize: 13, fontWeight: "900", letterSpacing: 0.5 },
 });

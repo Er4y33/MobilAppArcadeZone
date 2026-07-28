@@ -17,6 +17,8 @@ export type PlayerProfile = {
   coins: number;
   xp: number;
   avatar_url: string | null;
+  equipped_frame: string | null;
+  equipped_badge: string | null;
 };
 
 type AuthContextType = {
@@ -48,7 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from("players")
-      .select("id, username, level, coins, xp, avatar_url")
+      .select(
+        "id, username, level, coins, xp, avatar_url, equipped_frame, equipped_badge",
+      )
       .eq("id", userId)
       .single();
 

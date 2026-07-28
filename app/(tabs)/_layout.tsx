@@ -19,6 +19,7 @@ export default function TabLayout() {
         },
         tabBarActiveTintColor: colors.tabBarActive,
         tabBarInactiveTintColor: colors.tabBarInactive,
+        tabBarLabelStyle: { fontSize: 9 },
       }}
     >
       <Tabs.Screen
@@ -45,6 +46,16 @@ export default function TabLayout() {
           title: "Görevler",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkbox" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="store"
+        options={{
+          title: "Mağaza",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cart" size={size} color={color} />
           ),
         }}
       />

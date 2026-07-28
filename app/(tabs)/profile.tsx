@@ -34,8 +34,9 @@ function getXpProgress(xp: number): number {
 
 export default function ProfileScreen() {
   const { scores, getBestScore } = useScores();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { colors } = useTheme();
+
   const [stats, setStats] = useState<PlayerStats>({
     username: "",
     level: 1,
@@ -44,6 +45,12 @@ export default function ProfileScreen() {
     total_plays: 0,
     total_score: 0,
   });
+  const [equippedFrameColor, setEquippedFrameColor] = useState<string | null>(
+    null,
+  );
+  const [equippedBadgeText, setEquippedBadgeText] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -75,6 +82,30 @@ export default function ProfileScreen() {
       });
   }, [user, scores]);
 
+  // Kuşanılan çerçeve ve unvan bilgisini store_items'dan çek
+  useEffect(() => {
+    const ids = [profile?.equipped_frame, profile?.equipped_badge].filter(
+      Boolean,
+    ) as string[];
+
+    if (ids.length === 0) {
+      setEquippedFrameColor(null);
+      setEquippedBadgeText(null);
+      return;
+    }
+
+    supabase
+      .from("store_items")
+      .select("id, category, value")
+      .in("id", ids)
+      .then(({ data }) => {
+        const frame = data?.find((i: any) => i.category === "frame");
+        const badge = data?.find((i: any) => i.category === "badge");
+        setEquippedFrameColor(frame?.value ?? null);
+        setEquippedBadgeText(badge?.value ?? null);
+      });
+  }, [profile?.equipped_frame, profile?.equipped_badge]);
+
   const reactionBest = getBestScore("reaction");
   const memoryBest = getBestScore("memory");
   const sonsaniyeBest = getBestScore("sonsaniye");
@@ -93,7 +124,15 @@ export default function ProfileScreen() {
       {/* Üst: Avatar + İsim + Seviye */}
       <View style={[styles.headerCard, { backgroundColor: colors.surface }]}>
         {/* Avatar Dairesi */}
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+        <View
+          style={[
+            styles.avatar,
+            { backgroundColor: colors.primary },
+            equippedFrameColor
+              ? { borderWidth: 4, borderColor: equippedFrameColor }
+              : null,
+          ]}
+        >
           <Text style={styles.avatarText}>{initial}</Text>
         </View>
 
@@ -103,6 +142,15 @@ export default function ProfileScreen() {
         <Text style={[styles.levelText, { color: colors.primary }]}>
           SEVİYE {stats.level}
         </Text>
+
+        {/* Kuşanılan Unvan */}
+        {equippedBadgeText && (
+          <View style={[styles.equippedBadge, { borderColor: colors.accent }]}>
+            <Text style={[styles.equippedBadgeText, { color: colors.accent }]}>
+              {equippedBadgeText}
+            </Text>
+          </View>
+        )}
 
         {/* XP Progress Bar */}
         <View style={[styles.progressBg, { backgroundColor: colors.border }]}>
@@ -260,6 +308,14 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 12,
   },
+  equippedBadge: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginBottom: 12,
+  },
+  equippedBadgeText: { fontSize: 12, fontWeight: "900" },
   progressBg: {
     width: "100%",
     height: 8,
