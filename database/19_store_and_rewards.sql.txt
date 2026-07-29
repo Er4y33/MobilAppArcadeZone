@@ -1,0 +1,330 @@
+1.
+
+grant select on public.store_items to anon, authenticated;
+grant select on public.task_definitions to anon, authenticated;
+grant select on public.player_items to authenticated;
+grant select on public.player_tasks to authenticated;
+
+
+
+
+2.
+
+create or replace function public.record_game_session(
+  p_game_id text,
+  p_score int,
+  p_time_left int default 0
+)
+returns json
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_xp_reward int;
+  v_coin_reward int;
+  v_new_xp int;
+  v_new_coins int;
+  v_new_level int;
+  v_session_id bigint;
+begin
+  v_player_id := auth.uid();
+  if v_player_id is null then
+    raise exception 'Oturum açmamış kullanıcı skor kaydedemez';
+  end if;
+
+  if not exists (select 1 from public.games where id = p_game_id) then
+    raise exception 'Geçersiz oyun: %', p_game_id;
+  end if;
+
+  case p_game_id
+
+    when 'reaction' then
+      v_xp_reward := case
+        when p_score < 200 then 60
+        when p_score < 300 then 45
+        when p_score < 400 then 30
+        else 20
+      end;
+      v_coin_reward := v_xp_reward / 5;
+
+    when 'memory' then
+      v_xp_reward := case
+        when p_score = 8 then 100
+        when p_score <= 10 then 75
+        when p_score <= 14 then 55
+        when p_score <= 20 then 35
+        else 20
+      end;
+      v_coin_reward := v_xp_reward / 5;
+
+    when 'sonsaniye' then
+      v_xp_reward := case
+        when p_score >= 375 then 100
+        when p_score >= 300 then 85
+        when p_score >= 225 then 70
+        when p_score >= 150 then 50
+        when p_score >= 75 then 35
+        else 20
+      end;
+      v_coin_reward := case
+        when p_score >= 375 then 25
+        else v_xp_reward / 5
+      end;
+
+    when 'mathrush' then
+      v_xp_reward := case
+        when p_score >= 220 then 100
+        when p_score >= 180 then 75
+        when p_score >= 150 then 55
+        when p_score >= 100 then 35
+        else 20
+      end;
+      v_coin_reward := v_xp_reward / 5;
+
+    when 'pattern' then
+      v_xp_reward := case
+        when p_score >= 12 then 100
+        when p_score >= 9 then 75
+        when p_score >= 6 then 55
+        when p_score >= 3 then 35
+        else 20
+      end;
+      v_coin_reward := v_xp_reward / 5;
+
+    else
+      v_xp_reward := 20;
+      v_coin_reward := 4;
+  end case;
+
+  insert into public.game_sessions (player_id, game_id, score, time_left)
+  values (v_player_id, p_game_id, p_score, p_time_left)
+  returning id into v_session_id;
+
+  update public.players
+  set
+    xp = xp + v_xp_reward,
+    coins = coins + v_coin_reward,
+    level = 1 + ((xp + v_xp_reward) / 100),
+    updated_at = now()
+  where id = v_player_id
+  returning xp, coins, level into v_new_xp, v_new_coins, v_new_level;
+
+  return json_build_object(
+    'session_id', v_session_id,
+    'xp_earned', v_xp_reward,
+    'coins_earned', v_coin_reward,
+    'total_xp', v_new_xp,
+    'total_coins', v_new_coins,
+    'level', v_new_level
+  );
+end;
+$$;
+
+
+
+3.
+
+create or replace function public.purchase_item(p_item_id text)
+returns json
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_item record;
+  v_coins int;
+  v_new_coins int;
+begin
+  v_player_id := auth.uid();
+  if v_player_id is null then
+    raise exception 'Oturum açmamış kullanıcı satın alamaz';
+  end if;
+
+  select * into v_item from public.store_items where id = p_item_id;
+  if not found then
+    raise exception 'Geçersiz ürün: %', p_item_id;
+  end if;
+
+  if exists (
+    select 1 from public.player_items
+    where player_id = v_player_id and item_id = p_item_id
+  ) then
+    raise exception 'Bu ürüne zaten sahipsin';
+  end if;
+
+  select coins into v_coins from public.players where id = v_player_id;
+  if v_coins < v_item.price then
+    raise exception 'Yetersiz bakiye';
+  end if;
+
+  insert into public.player_items (player_id, item_id)
+  values (v_player_id, p_item_id);
+
+  update public.players
+  set coins = coins - v_item.price,
+      updated_at = now()
+  where id = v_player_id
+  returning coins into v_new_coins;
+
+  return json_build_object(
+    'item_id', p_item_id,
+    'total_coins', v_new_coins
+  );
+end;
+$$;
+
+
+create or replace function public.equip_item(p_item_id text)
+returns json
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_item record;
+begin
+  v_player_id := auth.uid();
+  if v_player_id is null then
+    raise exception 'Oturum açmamış kullanıcı';
+  end if;
+
+  -- null gönderilirse kuşanmayı kaldır (hangi kategori olduğu bilinmediği için ikisini de temizlemeyiz)
+  select * into v_item from public.store_items where id = p_item_id;
+  if not found then
+    raise exception 'Geçersiz ürün: %', p_item_id;
+  end if;
+
+  if not exists (
+    select 1 from public.player_items
+    where player_id = v_player_id and item_id = p_item_id
+  ) then
+    raise exception 'Bu ürüne sahip değilsin';
+  end if;
+
+  if v_item.category = 'frame' then
+    update public.players set equipped_frame = p_item_id, updated_at = now()
+    where id = v_player_id;
+  else
+    update public.players set equipped_badge = p_item_id, updated_at = now()
+    where id = v_player_id;
+  end if;
+
+  return json_build_object('equipped', p_item_id, 'category', v_item.category);
+end;
+$$;
+
+
+create or replace function public.unequip_category(p_category text)
+returns json
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_player_id uuid;
+begin
+  v_player_id := auth.uid();
+  if v_player_id is null then
+    raise exception 'Oturum açmamış kullanıcı';
+  end if;
+
+  if p_category = 'frame' then
+    update public.players set equipped_frame = null, updated_at = now()
+    where id = v_player_id;
+  else
+    update public.players set equipped_badge = null, updated_at = now()
+    where id = v_player_id;
+  end if;
+
+  return json_build_object('unequipped', p_category);
+end;
+$$;
+
+
+
+4.
+
+create or replace function public.claim_task_reward(p_task_id text)
+returns json
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_player_id uuid;
+  v_def record;
+  v_week_start date;
+  v_progress int;
+  v_completed boolean := false;
+  v_new_coins int;
+begin
+  v_player_id := auth.uid();
+  if v_player_id is null then
+    raise exception 'Oturum açmamış kullanıcı ödül alamaz';
+  end if;
+
+  select * into v_def from public.task_definitions where id = p_task_id;
+  if not found then
+    raise exception 'Geçersiz görev: %', p_task_id;
+  end if;
+
+  v_week_start := date_trunc('week', now())::date;
+
+  -- Daha önce alınmış mı?
+  if exists (
+    select 1 from public.player_tasks
+    where player_id = v_player_id
+      and task_id = p_task_id
+      and week_start = v_week_start
+  ) then
+    raise exception 'Bu görevin ödülü bu hafta zaten alındı';
+  end if;
+
+  -- İlerlemeyi SUNUCUDA doğrula (yalnızca bu haftanın oturumları)
+  if v_def.type = 'play_count' then
+    select count(*) into v_progress
+    from public.game_sessions
+    where player_id = v_player_id
+      and game_id = v_def.game_id
+      and played_at >= v_week_start;
+    v_completed := v_progress >= v_def.target;
+
+  elsif v_def.type = 'best_score_below' then
+    select min(score) into v_progress
+    from public.game_sessions
+    where player_id = v_player_id
+      and game_id = v_def.game_id
+      and played_at >= v_week_start;
+    v_completed := v_progress is not null and v_progress < v_def.target;
+
+  else -- best_score_above
+    select max(score) into v_progress
+    from public.game_sessions
+    where player_id = v_player_id
+      and game_id = v_def.game_id
+      and played_at >= v_week_start;
+    v_completed := v_progress is not null and v_progress >= v_def.target;
+  end if;
+
+  if not v_completed then
+    raise exception 'Görev henüz tamamlanmadı';
+  end if;
+
+  -- Kaydı oluştur ve coin ekle
+  insert into public.player_tasks (player_id, task_id, week_start, reward)
+  values (v_player_id, p_task_id, v_week_start, v_def.reward);
+
+  update public.players
+  set coins = coins + v_def.reward,
+      updated_at = now()
+  where id = v_player_id
+  returning coins into v_new_coins;
+
+  return json_build_object(
+    'task_id', p_task_id,
+    'reward', v_def.reward,
+    'total_coins', v_new_coins
+  );
+end;
+$$;
+
+
