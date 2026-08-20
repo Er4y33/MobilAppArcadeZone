@@ -6,8 +6,8 @@ React Native ile geliştirilmiş, beş mini oyun içeren tam kapsamlı (full-sta
 
 **Mobil Uygulama Geliştirme II** ve **Veri Tabanı Uygulamaları** derslerinin ortak final projesidir.
 
-- **Frontend:** React Native (Expo) — Melih Atahan Akgün
-- **Backend:** NestJS + TypeORM + Supabase — Eray
+Tasarım ve UI/UX: Melih Atahan Akgün
+Oyun mekanikleri, backend ve sistem tasarımı: Eray Çocuk
 
 ## 🎮 Oyunlar
 
