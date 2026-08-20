@@ -115,7 +115,8 @@ npm install
 
 `.env` dosyası:
 
-DATABASE_URL=postgresql://postgres:[SIFRE]@aws-1-eu-central-1.pooler.supabase.com:5432/postgres
+DATABASE_URL=postgresql://postgres:[SIFRE]@[HOST]:5432/postgres
+EXPO_PUBLIC_SUPABASE_URL=https://[PROJE_REF].supabase.co
 JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=3600s
 JWT_REFRESH_SECRET=your_refresh_secret
