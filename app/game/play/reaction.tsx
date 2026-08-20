@@ -45,10 +45,16 @@ export default function ReactionTapScreen() {
 
     if (gameState === "ready") {
       const ms = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
+
+      // 100 ms altı insan tepki sınırının altında → tahmin sayılır
+      if (ms < 100) {
+        setGameState("tooSoon");
+        return;
+      }
+
       setResult(ms);
       setGameState("tapped");
 
-      // Rekor kontrolü
       const prevBest = getBestScore("reaction");
       const isRecord = !prevBest || ms < prevBest.score;
       if (!bestSession || ms < bestSession) {
@@ -60,7 +66,6 @@ export default function ReactionTapScreen() {
       return;
     }
 
-    // tapped veya tooSoon → yeni round
     startRound();
   };
 

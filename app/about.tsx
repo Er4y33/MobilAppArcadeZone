@@ -1,9 +1,14 @@
 import { router } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
-
 export default function AboutScreen() {
   const { colors } = useTheme();
 
@@ -18,15 +23,25 @@ export default function AboutScreen() {
           ARCADE ZONE
         </Text>
         <Text style={[styles.logoSub, { color: colors.textMuted }]}>
-          v1.0.0 Alpha
+          v1.0.0
         </Text>
       </View>
 
       {/* Gelistiriciler */}
       <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-        GELISTIRICILER
+        GELİŞTİRİCİLER
       </Text>
-
+      <View
+        style={[
+          styles.devCard,
+          { backgroundColor: colors.surface, borderColor: colors.accent },
+        ]}
+      >
+        <Text style={[styles.devName, { color: colors.text }]}>Eray</Text>
+        <Text style={[styles.devRole, { color: colors.accent }]}>
+          Game Development
+        </Text>
+      </View>
       <View
         style={[
           styles.devCard,
@@ -39,34 +54,32 @@ export default function AboutScreen() {
         </Text>
       </View>
 
-      <View
-        style={[
-          styles.devCard,
-          { backgroundColor: colors.surface, borderColor: colors.accent },
-        ]}
-      >
-        <Text style={[styles.devName, { color: colors.text }]}>Eray</Text>
-        <Text style={[styles.devRole, { color: colors.accent }]}>
-          Game Development
-        </Text>
-      </View>
-
       {/* Tesekkurler */}
       <View style={[styles.thanksBox, { backgroundColor: colors.surface }]}>
         <Text style={[styles.thanksLabel, { color: colors.textMuted }]}>
-          OZEL TESEKKURLER
+          ÖZEL TEŞEKKÜRLER
         </Text>
         <Text style={[styles.thanksText, { color: colors.textSecondary }]}>
-          Tum ArcadeZone Oyuncularina!
+          Tüm ArcadeZone Oyuncularına!
         </Text>
-      </View>
 
+        <TouchableOpacity
+          style={{ marginTop: 14 }}
+          onPress={() =>
+            Linking.openURL("https://er4y33.github.io/arcadezone-privacy")
+          }
+        >
+          <Text style={[styles.thanksText, { color: colors.info }]}>
+            Gizlilik Politikası
+          </Text>
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity
         style={[styles.menuBtn, { backgroundColor: colors.surfaceAlt }]}
         onPress={() => router.back()}
       >
         <Text style={[styles.menuBtnText, { color: colors.text }]}>
-          ANA MENU
+          ANA MENÜ
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

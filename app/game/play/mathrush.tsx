@@ -6,33 +6,49 @@ import { useScores } from "../../../context/ScoreContext";
 
 const TOTAL_ROUNDS = 10;
 const ROUND_SECONDS = 8;
-
+type Op = "+" | "-" | "×";
 type Question = {
   a: number;
   b: number;
-  op: "+" | "-";
+  op: Op; // ← "+" | "-" yerine
   answer: number;
 };
 
 type Feedback = "none" | "correct" | "wrong" | "timeout";
 
-function generateQuestion(): Question {
-  const op: "+" | "-" = Math.random() < 0.5 ? "+" : "-";
-  let a = Math.floor(Math.random() * 20) + 1;
-  let b = Math.floor(Math.random() * 20) + 1;
-  if (op === "-" && b > a) {
-    [a, b] = [b, a];
+function generateQuestion(round: number): Question {
+  // Tur 1-3: toplama/çıkarma, küçük sayılar
+  // Tur 4-7: toplama/çıkarma, büyük sayılar
+  // Tur 8-10: çarpma devreye giriyor
+
+  let ops: Op[] = ["+", "-"];
+  let max = 20;
+
+  if (round >= 4) max = 50;
+  if (round >= 8) ops = ["+", "-", "×"];
+
+  const op = ops[Math.floor(Math.random() * ops.length)];
+
+  if (op === "×") {
+    const a = Math.floor(Math.random() * 9) + 2; // 2-10
+    const b = Math.floor(Math.random() * 9) + 2;
+    return { a, b, op, answer: a * b };
   }
-  const answer = op === "+" ? a + b : a - b;
-  return { a, b, op, answer };
+
+  let a = Math.floor(Math.random() * max) + 1;
+  let b = Math.floor(Math.random() * max) + 1;
+  if (op === "-" && b > a) [a, b] = [b, a];
+
+  return { a, b, op, answer: op === "+" ? a + b : a - b };
 }
 
 function generateOptions(answer: number): number[] {
   const options = new Set<number>([answer]);
+  const spread = answer > 30 ? 12 : 4;
   let guard = 0;
-  while (options.size < 4 && guard < 50) {
+  while (options.size < 4 && guard < 80) {
     guard++;
-    const offset = Math.floor(Math.random() * 9) - 4; // -4..+4
+    const offset = Math.floor(Math.random() * (spread * 2 + 1)) - spread;
     const candidate = answer + offset;
     if (candidate >= 0 && candidate !== answer) {
       options.add(candidate);
@@ -43,7 +59,7 @@ function generateOptions(answer: number): number[] {
 
 export default function MathRushScreen() {
   const [round, setRound] = useState(1);
-  const [question, setQuestion] = useState<Question>(() => generateQuestion());
+  const [question, setQuestion] = useState<Question>(() => generateQuestion(1));
   const [options, setOptions] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -51,6 +67,7 @@ export default function MathRushScreen() {
   const [feedback, setFeedback] = useState<Feedback>("none");
   const [gameOver, setGameOver] = useState(false);
   const [earnedXP, setEarnedXP] = useState(0);
+  const [roundSeconds, setRoundSeconds] = useState(8);
 
   // Async timer'ların gecikmeli çalışması yüzünden state yerine ref'ten okuyoruz
   const roundRef = useRef(1);
@@ -62,18 +79,20 @@ export default function MathRushScreen() {
   const { addScore } = useScores();
 
   useEffect(() => {
-    startRound(generateQuestion());
+    startRound(generateQuestion(1), 1);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     };
   }, []);
 
-  const startRound = (q: Question) => {
+  const startRound = (q: Question, roundNo: number) => {
     setQuestion(q);
     setOptions(generateOptions(q.answer));
     setFeedback("none");
-    setTimeLeft(ROUND_SECONDS);
+    const seconds = roundNo >= 8 ? 10 : 8;
+    setRoundSeconds(seconds);
+    setTimeLeft(seconds);
 
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
@@ -95,7 +114,7 @@ export default function MathRushScreen() {
     }
     roundRef.current += 1;
     setRound(roundRef.current);
-    startRound(generateQuestion());
+    startRound(generateQuestion(roundRef.current), roundRef.current);
   };
 
   const handleTimeout = () => {
@@ -123,12 +142,14 @@ export default function MathRushScreen() {
     advanceTimeoutRef.current = setTimeout(goToNextRound, 900);
   };
 
-  const finishGame = () => {
+  const finishGame = async () => {
     setGameOver(true);
-    addScore({ game: "mathrush", score: scoreRef.current, label: "points" });
-    const c = correctRef.current;
-    const xp = c >= 9 ? 100 : c >= 7 ? 75 : c >= 5 ? 55 : c >= 3 ? 35 : 20;
-    setEarnedXP(xp);
+    const reward = await addScore({
+      game: "mathrush",
+      score: scoreRef.current,
+      label: "points",
+    });
+    setEarnedXP(reward?.xpEarned ?? 0);
   };
 
   const resetGame = () => {
@@ -140,7 +161,7 @@ export default function MathRushScreen() {
     setCorrectCount(0);
     setGameOver(false);
     setEarnedXP(0);
-    startRound(generateQuestion());
+    startRound(generateQuestion(1), 1);
   };
 
   // ── OYUN SONU EKRANI ──────────────────────────────────────────
@@ -222,7 +243,7 @@ export default function MathRushScreen() {
         <View
           style={[
             styles.progressFill,
-            { width: `${(timeLeft / ROUND_SECONDS) * 100}%` },
+            { width: `${(timeLeft / roundSeconds) * 100}%` },
           ]}
         />
       </View>

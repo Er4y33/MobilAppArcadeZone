@@ -110,7 +110,19 @@ export default function LoginScreen() {
             <Text style={styles.btnPrimaryText}>OYUNA GİR</Text>
           )}
         </TouchableOpacity>
-
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/forgot-password")}
+        >
+          <Text
+            style={{
+              color: colors.textMuted,
+              textAlign: "center",
+              marginBottom: 12,
+            }}
+          >
+            Şifremi unuttum
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.linkWrap}
           onPress={() => router.push("/(auth)/signup")}

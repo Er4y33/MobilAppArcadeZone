@@ -1,11 +1,18 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import React from "react";
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-
+import { supabase } from "../../lib/supabase";
 export default function SettingsScreen() {
   const { signOut } = useAuth();
   const { mode, colors, toggleTheme } = useTheme();
@@ -15,7 +22,28 @@ export default function SettingsScreen() {
     await signOut();
     router.replace("/(auth)/login");
   };
-
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Hesabı sil",
+      "Tüm skorların, XP'in ve coinlerin kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        {
+          text: "Hesabımı Sil",
+          style: "destructive",
+          onPress: async () => {
+            const { error } = await supabase.rpc("delete_my_account");
+            if (error) {
+              Alert.alert("Hesap silinemedi", error.message);
+              return;
+            }
+            await signOut();
+            router.replace("/(auth)/login");
+          },
+        },
+      ],
+    );
+  };
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -49,21 +77,7 @@ export default function SettingsScreen() {
       >
         <View style={styles.rowLeft}>
           <Ionicons name="information-circle" size={22} color={colors.info} />
-          <Text style={[styles.label, { color: colors.text }]}>Hakkinda</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-      </TouchableOpacity>
-
-      {/* Backend API Testi */}
-      <TouchableOpacity
-        style={[styles.row, { backgroundColor: colors.surface }]}
-        onPress={() => router.push("/backend")}
-      >
-        <View style={styles.rowLeft}>
-          <Ionicons name="server-outline" size={22} color={colors.accent} />
-          <Text style={[styles.label, { color: colors.text }]}>
-            Backend API Testi
-          </Text>
+          <Text style={[styles.label, { color: colors.text }]}>Hakkında</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </TouchableOpacity>
@@ -75,6 +89,16 @@ export default function SettingsScreen() {
       >
         <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
         <Text style={styles.logoutText}>Hesaptan Çıkış Yap</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.deleteButton, { borderColor: colors.danger }]}
+        onPress={handleDeleteAccount}
+      >
+        <Ionicons name="trash-outline" size={20} color={colors.danger} />
+        <Text style={[styles.deleteText, { color: colors.danger }]}>
+          Hesabımı Sil
+        </Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -121,4 +145,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+  deleteButton: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1,
+  },
+  deleteText: { fontSize: 15, fontWeight: "700" },
 });

@@ -2,12 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
-    Dimensions,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
@@ -19,13 +19,13 @@ const SLIDES = [
     id: "1",
     emoji: "🎮",
     title: "ArcadeZone'a Hosgeldin!",
-    desc: "3 farkli oyun, tek rekabet. Zirveye tirmanmaya hazir misin?",
+    desc: "5 farklı oyun, tek rekabet. Zirveye tırmanmaya hazır mısın?",
   },
   {
     id: "2",
-    emoji: "⚡🧠⏱",
-    title: "3 Farkli Oyun",
-    desc: "Tepkini olc, hafizani zorla ve kelime bulmacalarini coz. Her oyun farkli bir beceri olcer.",
+    emoji: "⚡🧠⏱ + >>",
+    title: "5 Farklı Oyun",
+    desc: "Tepkini ölç, hafızanı zorla ve kelime bulmacalarını çöz. Her oyun farklı bir beceri ölçer.",
   },
   {
     id: "3",

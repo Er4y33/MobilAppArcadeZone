@@ -24,11 +24,15 @@ export type ScoreItem = {
   label: "ms" | "moves" | "points";
   playedAt: string;
 };
-
+export type RewardResult = {
+  xpEarned: number;
+  coinsEarned: number;
+  level: number;
+} | null;
 type ScoreContextType = {
   scores: ScoreItem[];
   loading: boolean;
-  addScore: (item: Omit<ScoreItem, "id" | "playedAt">) => Promise<void>;
+  addScore: (item: Omit<ScoreItem, "id" | "playedAt">) => Promise<RewardResult>;
   getBestScore: (game: GameKey) => ScoreItem | null;
   refreshScores: () => Promise<void>;
 };
@@ -88,13 +92,14 @@ export function ScoreProvider({ children }: { children: ReactNode }) {
   }, [refreshScores]);
 
   // Skor ekle: Supabase RPC fonksiyonunu çağırır (atomik: skor + XP + coin)
-  const addScore = async (item: Omit<ScoreItem, "id" | "playedAt">) => {
+  const addScore = async (
+    item: Omit<ScoreItem, "id" | "playedAt">,
+  ): Promise<RewardResult> => {
     if (!user) {
       console.warn("Skor kaydedilemedi: kullanıcı oturum açmamış");
-      return;
+      return null;
     }
 
-    // record_game_session RPC: hem skoru ekler, hem XP/coin verir, hem seviyeyi hesaplar
     const { data, error } = await supabase.rpc("record_game_session", {
       p_game_id: item.game,
       p_score: item.score,
@@ -103,10 +108,9 @@ export function ScoreProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error("Skor kaydedilemedi:", error.message);
-      return;
+      return null;
     }
 
-    // RPC sonucundan session_id geliyor, satırı çekip local state'e ekle
     if (data?.session_id) {
       const { data: row } = await supabase
         .from("game_sessions")
@@ -119,8 +123,13 @@ export function ScoreProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Ana menüde XP/coin/seviye güncel görünsün diye profili yenile
     await refreshProfile();
+
+    return {
+      xpEarned: data?.xp_earned ?? 0,
+      coinsEarned: data?.coins_earned ?? 0,
+      level: data?.level ?? 1,
+    };
   };
 
   // En iyi skoru bul (oyuna göre düşük veya yüksek)

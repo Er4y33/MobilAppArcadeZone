@@ -43,10 +43,18 @@ function getBadgeLabel(level: number): string {
   return "🎮 YENİ OYUNCU";
 }
 
-// XP progress barı için: mevcut seviyede ne kadar ilerlendi?
-function getXpProgress(xp: number): number {
-  const xpInCurrentLevel = xp % 100;
-  return xpInCurrentLevel / 100;
+// Seviye eğrisi: 1→2 = 100 XP, sonra her seviye +50
+function getLevelProgress(xp: number) {
+  let level = 1;
+  let needed = 100;
+  let remaining = xp ?? 0;
+
+  while (remaining >= needed && level < 100) {
+    remaining -= needed;
+    level += 1;
+    needed = 100 + (level - 1) * 50;
+  }
+  return { xpInLevel: remaining, xpNeeded: needed, ratio: remaining / needed };
 }
 
 export default function ProfileScreen() {
@@ -175,8 +183,7 @@ export default function ProfileScreen() {
   const mathrushBest = getBestScore("mathrush");
   const patternBest = getBestScore("pattern");
 
-  const xpProgress = getXpProgress(stats.xp);
-  const xpInLevel = stats.xp % 100;
+  const { xpInLevel, xpNeeded, ratio: xpProgress } = getLevelProgress(stats.xp);
   const badge = getBadgeLabel(stats.level);
   const initial = stats.username ? stats.username.charAt(0).toUpperCase() : "?";
 
@@ -230,7 +237,7 @@ export default function ProfileScreen() {
             />
           </View>
           <Text style={[styles.xpText, { color: colors.textMuted }]}>
-            {xpInLevel} / 100 XP
+            {xpInLevel} / {xpNeeded} XP
           </Text>
         </View>
 

@@ -91,18 +91,9 @@ export default function PatternSequenceScreen() {
       const score = sequenceRef.current.length - 1;
       setFinalScore(score);
       setGameOver(true);
-      addScore({ game: "pattern", score, label: "points" });
-      const xp =
-        score >= 9
-          ? 100
-          : score >= 6
-            ? 75
-            : score >= 4
-              ? 55
-              : score >= 2
-                ? 35
-                : 20;
-      setEarnedXP(xp);
+      addScore({ game: "pattern", score, label: "points" }).then((reward) =>
+        setEarnedXP(reward?.xpEarned ?? 0),
+      );
       return;
     }
 

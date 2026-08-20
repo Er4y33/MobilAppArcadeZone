@@ -112,7 +112,9 @@ export default function TasksScreen() {
 
   const fetchClaimed = React.useCallback(async () => {
     if (!user) return;
-    const weekStartStr = weekStart.toISOString().slice(0, 10);
+    const weekStartStr = `${weekStart.getFullYear()}-${String(
+      weekStart.getMonth() + 1,
+    ).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
     const { data } = await supabase
       .from("player_tasks")
       .select("task_id")
