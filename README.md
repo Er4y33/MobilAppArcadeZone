@@ -131,5 +131,5 @@ npm run start:dev
 
 | İsim               | Rol                  | GitHub                                                   |
 | ------------------ | -------------------- | -------------------------------------------------------- |
-| Eray               | 	Oyun mekanikleri, backend, veritabanı, ekonomi tasarımı, yayın süreci | [@Er4y33](https://github.com/Er4y33)                     |
+| Eray Çocuk              | 	Oyun mekanikleri, backend, veritabanı, ekonomi tasarımı, yayın süreci | [@Er4y33](https://github.com/Er4y33)                     |
 | Melih Atahan Akgün | Frontend & UI/UX     | [@MelihAtahanAkgun](https://github.com/MelihAtahanAkgun) |
