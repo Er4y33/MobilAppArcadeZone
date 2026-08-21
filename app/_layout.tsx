@@ -1,9 +1,9 @@
 import { Stack } from "expo-router";
 import React from "react";
 import { AuthProvider } from "../context/AuthContext";
+import { HapticsProvider } from "../context/HapticsContext";
 import { ScoreProvider } from "../context/ScoreContext";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
-
 function RootNavigator() {
   const { colors } = useTheme();
 
@@ -25,11 +25,11 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="game/play/reaction"
-        options={{ headerShown: true, title: "Reaction Tap" }}
+        options={{ headerShown: true, title: "Tepki Testi" }}
       />
       <Stack.Screen
         name="game/play/memory"
-        options={{ headerShown: true, title: "Memory Match" }}
+        options={{ headerShown: true, title: "Hafıza Eşleştirme" }}
       />
       <Stack.Screen
         name="game/play/sonsaniye"
@@ -54,11 +54,13 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <ScoreProvider>
-          <RootNavigator />
-        </ScoreProvider>
-      </AuthProvider>
+      <HapticsProvider>
+        <AuthProvider>
+          <ScoreProvider>
+            <RootNavigator />
+          </ScoreProvider>
+        </AuthProvider>
+      </HapticsProvider>
     </ThemeProvider>
   );
 }

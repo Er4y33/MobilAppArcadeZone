@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
 import { useTheme } from "../../../context/ThemeContext";
@@ -16,7 +17,12 @@ import {
   WORDS_PER_LEVEL,
   shuffleLetters,
 } from "../../../lib/data/sonsaniyeKelimeler";
-
+import {
+  hapticError,
+  hapticLight,
+  hapticSuccess,
+  hapticWarning
+} from "../../../lib/haptics";
 // Türkçe büyük/küçük harf yardımcıları
 const toLowerTR = (s: string) =>
   s.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase();
@@ -98,6 +104,14 @@ export default function SonSaniyeScreen() {
   // ─── OYUNU BİTİR ────────────────────────────────────────────
   const endGame = (victory: boolean) => {
     if (timerRef.current) clearInterval(timerRef.current);
+
+    // Zafer → başarı, süre bitti → uyarı titreşimi
+    if (victory) {
+      hapticSuccess();
+    } else {
+      hapticWarning();
+    }
+
     setIsVictory(victory);
     setPhase("gameOver");
 
@@ -130,6 +144,9 @@ export default function SonSaniyeScreen() {
     const target = toLowerTR(targetWord);
 
     if (guess === target) {
+      // Doğru kelime → başarı titreşimi
+      hapticSuccess();
+
       const pts = LEVELS[levelIndex].points;
       const newScore = scoreRef.current + pts;
       scoreRef.current = newScore;
@@ -158,6 +175,8 @@ export default function SonSaniyeScreen() {
         loadWord(levelIndex, newUsed);
       }
     } else {
+      // Yanlış kelime → hata titreşimi
+      hapticError();
       setFeedback("YANLIŞ — Tekrar Dene");
       setInput("");
     }
@@ -165,6 +184,7 @@ export default function SonSaniyeScreen() {
 
   // ─── PAS GEÇ ────────────────────────────────────────────────
   const passWord = () => {
+    hapticLight();
     const newScore = Math.max(0, scoreRef.current - 5);
     scoreRef.current = newScore;
     setScore(newScore);
@@ -180,7 +200,12 @@ export default function SonSaniyeScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
         <View style={styles.resultBox}>
           {/* İkon */}
-          <Text style={styles.resultEmoji}>{isVictory ? "🏆" : "⏱"}</Text>
+          <Animated.Text
+            style={styles.resultEmoji}
+            entering={ZoomIn.duration(400)}
+          >
+            {isVictory ? "🏆" : "⏱"}
+          </Animated.Text>
 
           {/* Başlık */}
           <Text style={styles.resultTitle}>
@@ -191,15 +216,21 @@ export default function SonSaniyeScreen() {
           </Text>
 
           {/* Skor kutusu */}
-          <View style={styles.scoreBox}>
+          <Animated.View
+            style={styles.scoreBox}
+            entering={FadeInDown.delay(150).duration(400)}
+          >
             <Text style={styles.scoreBoxLabel}>TOPLAM SKOR</Text>
             <Text style={styles.scoreBoxValue}>{score}</Text>
-          </View>
+          </Animated.View>
 
           {/* XP kazanıldı */}
-          <View style={styles.xpBox}>
+          <Animated.View
+            style={styles.xpBox}
+            entering={FadeInDown.delay(300).duration(400)}
+          >
             <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
-          </View>
+          </Animated.View>
 
           {/* Seviye bilgisi */}
           <Text style={styles.levelReached}>

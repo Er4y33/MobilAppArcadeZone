@@ -24,8 +24,8 @@ type PlayerStats = {
 
 // Grafiklerde kullanılacak oyun listesi
 const GAME_META: { key: GameKey; label: string; emoji: string }[] = [
-  { key: "reaction", label: "Reaction", emoji: "⚡" },
-  { key: "memory", label: "Memory", emoji: "🧠" },
+  { key: "reaction", label: "Tepki", emoji: "⚡" },
+  { key: "memory", label: "Hafıza", emoji: "🧠" },
   { key: "sonsaniye", label: "Son Saniye", emoji: "⏱" },
   { key: "mathrush", label: "Sayı Avı", emoji: "🔢" },
   { key: "pattern", label: "Sırayı Takip", emoji: "🎨" },

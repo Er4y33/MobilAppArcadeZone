@@ -12,13 +12,13 @@ Tasarım ve UI/UX: Melih Atahan Akgün
 
 ## 🎮 Oyunlar
 
-| Oyun               | Beceri                      | Skor Mantığı        |
-| ------------------ | --------------------------- | ------------------- |
-| ⚡ Reaction Tap    | Refleks                     | Düşük ms = iyi      |
-| 🧠 Memory Match    | Görsel hafıza               | Az hamle = iyi      |
-| ⏱ Son Saniye       | Kelime bilgisi              | Yüksek puan = iyi   |
-| 🔢 Sayı Avı        | Matematik / hızlı hesaplama | Yüksek puan = iyi   |
-| 🎨 Sırayı Takip Et | Sıralı hafıza               | Yüksek seviye = iyi |
+| Oyun                 | Beceri                      | Skor Mantığı        |
+| -------------------- | --------------------------- | ------------------- |
+| ⚡ Tepki Testi       | Refleks                     | Düşük ms = iyi      |
+| 🧠 Hafıza Eşleştirme | Görsel hafıza               | Az hamle = iyi      |
+| ⏱ Son Saniye         | Kelime bilgisi              | Yüksek puan = iyi   |
+| 🔢 Sayı Avı          | Matematik / hızlı hesaplama | Yüksek puan = iyi   |
+| 🎨 Sırayı Takip Et   | Sıralı hafıza               | Yüksek seviye = iyi |
 
 ## ✨ Özellikler
 
@@ -130,7 +130,7 @@ npm run start:dev
 
 ## 👥 Geliştiriciler
 
-| İsim               | Rol                  | GitHub                                                   |
-| ------------------ | -------------------- | -------------------------------------------------------- |
-| Eray Çocuk              | 	Oyun mekanikleri, backend, veritabanı, ekonomi tasarımı, yayın süreci | [@Er4y33](https://github.com/Er4y33)                     |
-| Melih Atahan Akgün | Frontend & UI/UX     | [@MelihAtahanAkgun](https://github.com/MelihAtahanAkgun) |
+| İsim               | Rol                                                                   | GitHub                                                   |
+| ------------------ | --------------------------------------------------------------------- | -------------------------------------------------------- |
+| Eray Çocuk         | Oyun mekanikleri, backend, veritabanı, ekonomi tasarımı, yayın süreci | [@Er4y33](https://github.com/Er4y33)                     |
+| Melih Atahan Akgün | Frontend & UI/UX                                                      | [@MelihAtahanAkgun](https://github.com/MelihAtahanAkgun) |

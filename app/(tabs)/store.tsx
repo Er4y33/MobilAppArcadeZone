@@ -1,17 +1,18 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { hapticSuccess } from "../../lib/haptics";
 import { supabase } from "../../lib/supabase";
 
 type StoreItem = {
@@ -96,6 +97,8 @@ export default function StoreScreen() {
               Alert.alert("Satın alınamadı", error.message);
               return;
             }
+            // Satın alma başarılı
+            hapticSuccess();
             await refreshProfile();
             await fetchData();
             Alert.alert("Tebrikler!", `"${item.name}" artık senin.`);

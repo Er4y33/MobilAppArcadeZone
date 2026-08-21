@@ -1,15 +1,24 @@
-import { Dimensions } from "react-native";
-
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useScores } from "../../../context/ScoreContext";
+import {
+  hapticError,
+  hapticLight,
+  hapticSuccess
+} from "../../../lib/haptics";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GRID_PADDING = 16; // container padding
 const GRID_GAP = 12;
 const BUTTON_SIZE = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / 2;
-
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useScores } from "../../../context/ScoreContext";
 
 const COLORS = [
   { id: 0, base: "#450A0A", active: "#EF4444" },
@@ -85,9 +94,14 @@ export default function PatternSequenceScreen() {
   const handlePress = (colorIndex: number) => {
     if (isShowingSequence || gameOver) return;
 
+    // Her dokunuşta hafif titreşim
+    hapticLight();
+
     const expected = sequenceRef.current[playerStepRef.current];
 
     if (colorIndex !== expected) {
+      // Yanlış renk → hata titreşimi
+      hapticError();
       const score = sequenceRef.current.length - 1;
       setFinalScore(score);
       setGameOver(true);
@@ -100,7 +114,8 @@ export default function PatternSequenceScreen() {
     playerStepRef.current += 1;
 
     if (playerStepRef.current === sequenceRef.current.length) {
-      // Tur tamamlandı, sıraya yeni bir renk ekle
+      // Tur tamamlandı → başarı titreşimi, sıraya yeni bir renk ekle
+      hapticSuccess();
       sequenceRef.current = [...sequenceRef.current, randomColorIndex()];
       setLevel(sequenceRef.current.length);
       timeoutsRef.current.push(setTimeout(playSequence, 700));
@@ -113,15 +128,22 @@ export default function PatternSequenceScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.resultBox}>
-          <Text style={styles.resultEmoji}>
+          <Animated.Text
+            style={styles.resultEmoji}
+            entering={ZoomIn.duration(400)}
+          >
             {stars === 3 ? "🏆" : stars === 2 ? "⭐" : "✅"}
-          </Text>
+          </Animated.Text>
+
           <Text style={styles.resultTitle}>
             {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
           </Text>
           <Text style={styles.resultSub}>Sırayı Takip Et</Text>
 
-          <View style={styles.starsRow}>
+          <Animated.View
+            style={styles.starsRow}
+            entering={ZoomIn.delay(150).duration(400)}
+          >
             {[1, 2, 3].map((s) => (
               <Text
                 key={s}
@@ -130,7 +152,7 @@ export default function PatternSequenceScreen() {
                 ★
               </Text>
             ))}
-          </View>
+          </Animated.View>
 
           <View style={styles.statsBox}>
             <View style={styles.statRow}>
@@ -143,9 +165,12 @@ export default function PatternSequenceScreen() {
             </View>
           </View>
 
-          <View style={styles.xpBox}>
+          <Animated.View
+            style={styles.xpBox}
+            entering={FadeInDown.delay(300).duration(400)}
+          >
             <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
-          </View>
+          </Animated.View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={startGame}>
             <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>

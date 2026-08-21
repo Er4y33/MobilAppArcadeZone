@@ -1,16 +1,23 @@
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
-
+import {
+  hapticError,
+  hapticLight,
+  hapticSuccess,
+  hapticWarning
+} from "../../../lib/haptics";
 const TOTAL_ROUNDS = 10;
 const ROUND_SECONDS = 8;
+
 type Op = "+" | "-" | "×";
 type Question = {
   a: number;
   b: number;
-  op: Op; // ← "+" | "-" yerine
+  op: Op;
   answer: number;
 };
 
@@ -118,6 +125,8 @@ export default function MathRushScreen() {
   };
 
   const handleTimeout = () => {
+    // Süre doldu → uyarı titreşimi
+    hapticWarning();
     setFeedback("timeout");
     advanceTimeoutRef.current = setTimeout(goToNextRound, 900);
   };
@@ -131,12 +140,16 @@ export default function MathRushScreen() {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
     if (value === currentQuestion.answer) {
+      // Doğru cevap → başarı titreşimi
+      hapticSuccess();
       setFeedback("correct");
       scoreRef.current += 10 + currentTimeLeft; // hız bonusu
       correctRef.current += 1;
       setScore(scoreRef.current);
       setCorrectCount(correctRef.current);
     } else {
+      // Yanlış cevap → hata titreşimi
+      hapticError();
       setFeedback("wrong");
     }
     advanceTimeoutRef.current = setTimeout(goToNextRound, 900);
@@ -153,6 +166,7 @@ export default function MathRushScreen() {
   };
 
   const resetGame = () => {
+    hapticLight();
     roundRef.current = 1;
     scoreRef.current = 0;
     correctRef.current = 0;
@@ -170,15 +184,22 @@ export default function MathRushScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.resultBox}>
-          <Text style={styles.resultEmoji}>
+          <Animated.Text
+            style={styles.resultEmoji}
+            entering={ZoomIn.duration(400)}
+          >
             {stars === 3 ? "🏆" : stars === 2 ? "⭐" : "✅"}
-          </Text>
+          </Animated.Text>
+
           <Text style={styles.resultTitle}>
             {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
           </Text>
           <Text style={styles.resultSub}>Sayı Avı</Text>
 
-          <View style={styles.starsRow}>
+          <Animated.View
+            style={styles.starsRow}
+            entering={ZoomIn.delay(150).duration(400)}
+          >
             {[1, 2, 3].map((s) => (
               <Text
                 key={s}
@@ -187,7 +208,7 @@ export default function MathRushScreen() {
                 ★
               </Text>
             ))}
-          </View>
+          </Animated.View>
 
           <View style={styles.statsBox}>
             <View style={styles.statRow}>
@@ -202,9 +223,12 @@ export default function MathRushScreen() {
             </View>
           </View>
 
-          <View style={styles.xpBox}>
+          <Animated.View
+            style={styles.xpBox}
+            entering={FadeInDown.delay(300).duration(400)}
+          >
             <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
-          </View>
+          </Animated.View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={resetGame}>
             <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>

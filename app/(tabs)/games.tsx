@@ -21,12 +21,12 @@ export default function GamesScreen() {
         onPress={() =>
           router.push({
             pathname: "/game/[id]",
-            params: { id: "reaction", title: "Reaction Tap" },
+            params: { id: "reaction", title: "Tepki Testi" },
           })
         }
       >
         <Text style={[styles.cardTitle, { color: colors.text }]}>
-          Reaction Tap
+          Tepki Testi
         </Text>
         <Text style={[styles.cardText, { color: colors.textMuted }]}>
           Hızlı tepki verme oyunu
@@ -41,12 +41,12 @@ export default function GamesScreen() {
         onPress={() =>
           router.push({
             pathname: "/game/[id]",
-            params: { id: "memory", title: "Memory Match" },
+            params: { id: "memory", title: "Hafıza Eşleştirme" },
           })
         }
       >
         <Text style={[styles.cardTitle, { color: colors.text }]}>
-          Memory Match
+          Hafıza Eşleştirme
         </Text>
         <Text style={[styles.cardText, { color: colors.textMuted }]}>
           Kart eşleştirme oyunu

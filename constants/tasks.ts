@@ -32,14 +32,14 @@ export const REWARD_BY_DIFFICULTY: Record<Difficulty, number> = {
 
 // Görev havuzu — her hafta buradan 6 tanesi seçilir
 export const TASK_POOL: TaskDefinition[] = [
-  // ── Reaction Tap ────────────────────────────────────────
+  // ── Tepki Testi ────────────────────────────────────────
   {
     id: "reaction_play_5",
     gameId: "reaction",
-    gameName: "Reaction Tap",
+    gameName: "Tepki Testi",
     emoji: "⚡",
     title: "Isınma Turu",
-    description: "Reaction Tap'i 5 kez oyna",
+    description: "Tepki Testi'ni 5 kez oyna",
     type: "play_count",
     target: 5,
     difficulty: "kolay",
@@ -47,10 +47,10 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "reaction_under_200",
     gameId: "reaction",
-    gameName: "Reaction Tap",
+    gameName: "Tepki Testi",
     emoji: "⚡",
     title: "Şimşek Refleks",
-    description: "Reaction Tap'te 200 ms altına in",
+    description: "Tepki Testi'inde 200 ms altına in",
     type: "best_score_below",
     target: 200,
     difficulty: "orta",
@@ -58,23 +58,23 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "reaction_under_120",
     gameId: "reaction",
-    gameName: "Reaction Tap",
+    gameName: "Tepki Testi",
     emoji: "⚡",
     title: "Yıldırım Hızı",
-    description: "Reaction Tap'te 120 ms altına in",
+    description: "Tepki Testi'inde 120 ms altına in",
     type: "best_score_below",
     target: 120,
     difficulty: "zor",
   },
 
-  // ── Memory Match ────────────────────────────────────────
+  // ── Hafıza Eşleştirme ────────────────────────────────────────
   {
     id: "memory_play_5",
     gameId: "memory",
-    gameName: "Memory Match",
+    gameName: "Hafıza Eşleştirme",
     emoji: "🧠",
     title: "Kart Delisi",
-    description: "Memory Match'i 5 kez oyna",
+    description: "Hafıza Eşleştirme'yi 5 kez oyna",
     type: "play_count",
     target: 5,
     difficulty: "kolay",
@@ -82,10 +82,10 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "memory_under_14",
     gameId: "memory",
-    gameName: "Memory Match",
+    gameName: "Hafıza Eşleştirme",
     emoji: "🧠",
     title: "Keskin Hafıza",
-    description: "Memory Match'i 14 hamleden az bitir",
+    description: "Hafıza Eşleştirme'yi 14 hamleden az bitir",
     type: "best_score_below",
     target: 14,
     difficulty: "orta",
@@ -93,10 +93,10 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "memory_under_12",
     gameId: "memory",
-    gameName: "Memory Match",
+    gameName: "Hafıza Eşleştirme",
     emoji: "🧠",
     title: "Fotoğrafik Hafıza",
-    description: "Memory Match'i 12 hamleden az bitir",
+    description: "Hafıza Eşleştirme'yi 12 hamleden az bitir",
     type: "best_score_below",
     target: 12,
     difficulty: "zor",

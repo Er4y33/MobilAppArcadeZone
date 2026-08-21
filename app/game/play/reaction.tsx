@@ -3,7 +3,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
-
+import {
+  hapticError,
+  hapticLight,
+  hapticMedium,
+  hapticSuccess
+} from "../../../lib/haptics";
 type GameState = "waiting" | "ready" | "tapped" | "tooSoon";
 
 export default function ReactionTapScreen() {
@@ -32,12 +37,16 @@ export default function ReactionTapScreen() {
     const delay = Math.floor(Math.random() * 3000) + 1500;
     timeoutRef.current = setTimeout(() => {
       setGameState("ready");
+      // Yeşile döndü → dokunma sinyali
+      hapticMedium();
       startTimeRef.current = Date.now();
     }, delay);
   };
 
   const handleTap = () => {
     if (gameState === "waiting") {
+      // Çok erken dokundu → hata titreşimi
+      hapticError();
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setGameState("tooSoon");
       return;
@@ -48,9 +57,13 @@ export default function ReactionTapScreen() {
 
       // 100 ms altı insan tepki sınırının altında → tahmin sayılır
       if (ms < 100) {
+        hapticError();
         setGameState("tooSoon");
         return;
       }
+
+      // Geçerli sonuç → başarı titreşimi
+      hapticSuccess();
 
       setResult(ms);
       setGameState("tapped");
@@ -66,6 +79,8 @@ export default function ReactionTapScreen() {
       return;
     }
 
+    // Yeni tur → hafif titreşim
+    hapticLight();
     startRound();
   };
 
@@ -114,7 +129,7 @@ export default function ReactionTapScreen() {
     <SafeAreaView style={styles.container}>
       {/* Başlık */}
       <View style={styles.topBar}>
-        <Text style={styles.gameTitle}>TEPKİ OYUNU</Text>
+        <Text style={styles.gameTitle}>TEPKİ TESTİ</Text>
         {bestSession !== null && (
           <View style={styles.bestBadge}>
             <Text style={styles.bestBadgeText}>EN İYİ: {bestSession}ms</Text>

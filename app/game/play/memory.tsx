@@ -1,9 +1,14 @@
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
-
+import {
+  hapticError,
+  hapticLight,
+  hapticSuccess
+} from "../../../lib/haptics";
 type CardType = {
   id: number;
   value: string;
@@ -46,6 +51,8 @@ export default function MemoryMatchScreen() {
     setMoves((m) => m + 1);
 
     if (ca.value === cb.value) {
+      // Eşleşme → başarı titreşimi
+      hapticSuccess();
       setCards((prev) =>
         prev.map((c) =>
           c.id === a || c.id === b ? { ...c, matched: true } : c,
@@ -53,6 +60,8 @@ export default function MemoryMatchScreen() {
       );
       setSelected([]);
     } else {
+      // Eşleşmedi → hata titreşimi
+      hapticError();
       setTimeout(() => {
         setCards((prev) =>
           prev.map((c) =>
@@ -93,6 +102,8 @@ export default function MemoryMatchScreen() {
   const handleCardPress = (id: number) => {
     const card = cards.find((c) => c.id === id);
     if (!card || card.flipped || card.matched || selected.length === 2) return;
+    // Kart çevirme → hafif titreşim
+    hapticLight();
     setCards((prev) =>
       prev.map((c) => (c.id === id ? { ...c, flipped: true } : c)),
     );
@@ -107,21 +118,23 @@ export default function MemoryMatchScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.resultBox}>
-          <Text style={styles.resultEmoji}>
+          <Animated.Text
+            style={styles.resultEmoji}
+            entering={ZoomIn.duration(400)}
+          >
             {stars === 3 ? "🏆" : stars === 2 ? "⭐" : "✅"}
-          </Text>
+          </Animated.Text>
 
           <Text style={styles.resultTitle}>
-            {stars === 3
-              ? "MÜKEMMEL!"
-              : stars === 2
-                ? "BÖLÜM TAMAM!"
-                : "BÖLÜM TAMAM!"}
+            {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
           </Text>
-          <Text style={styles.resultSub}>Hafıza Oyunu</Text>
+          <Text style={styles.resultSub}>Hafıza Eşleştirme</Text>
 
           {/* Yıldızlar */}
-          <View style={styles.starsRow}>
+          <Animated.View
+            style={styles.starsRow}
+            entering={ZoomIn.delay(150).duration(400)}
+          >
             {[1, 2, 3].map((s) => (
               <Text
                 key={s}
@@ -130,7 +143,7 @@ export default function MemoryMatchScreen() {
                 ★
               </Text>
             ))}
-          </View>
+          </Animated.View>
 
           {/* İstatistikler */}
           <View style={styles.statsBox}>
@@ -147,9 +160,12 @@ export default function MemoryMatchScreen() {
           </View>
 
           {/* XP */}
-          <View style={styles.xpBox}>
+          <Animated.View
+            style={styles.xpBox}
+            entering={FadeInDown.delay(300).duration(400)}
+          >
             <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
-          </View>
+          </Animated.View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={resetGame}>
             <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
@@ -176,10 +192,10 @@ export default function MemoryMatchScreen() {
           <Text style={styles.headerValue}>{moves}</Text>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.gameTitle}>HAFIZA OYUNU</Text>
+          <Text style={styles.gameTitle}>HAFIZA EŞLEŞTİRME</Text>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.headerLabel}>ESLESME</Text>
+          <Text style={styles.headerLabel}>EŞLEŞME</Text>
           <Text style={[styles.headerValue, { color: "#EC4899" }]}>
             {matched}/{baseCards.length}
           </Text>

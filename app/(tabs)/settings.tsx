@@ -11,17 +11,28 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
+import { useHaptics } from "../../context/HapticsContext";
 import { useTheme } from "../../context/ThemeContext";
+import { hapticLight } from "../../lib/haptics";
 import { supabase } from "../../lib/supabase";
+
 export default function SettingsScreen() {
   const { signOut } = useAuth();
   const { mode, colors, toggleTheme } = useTheme();
+  const { hapticsEnabled, setHaptics } = useHaptics();
   const isDark = mode === "dark";
 
   const handleSignOut = async () => {
     await signOut();
     router.replace("/(auth)/login");
   };
+
+  const handleToggleHaptics = (value: boolean) => {
+    setHaptics(value);
+    // Açıldığı anda örnek titreşim ver — kullanıcı ne açtığını hissetsin
+    if (value) hapticLight();
+  };
+
   const handleDeleteAccount = () => {
     Alert.alert(
       "Hesabı sil",
@@ -44,6 +55,7 @@ export default function SettingsScreen() {
       ],
     );
   };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -65,6 +77,24 @@ export default function SettingsScreen() {
         <Switch
           value={isDark}
           onValueChange={toggleTheme}
+          trackColor={{ false: "#D1D5DB", true: colors.primary }}
+          thumbColor="#FFFFFF"
+        />
+      </View>
+
+      {/* Titreşim Toggle */}
+      <View style={[styles.row, { backgroundColor: colors.surface }]}>
+        <View style={styles.rowLeft}>
+          <Ionicons
+            name={hapticsEnabled ? "phone-portrait" : "phone-portrait-outline"}
+            size={22}
+            color={colors.primaryAlt}
+          />
+          <Text style={[styles.label, { color: colors.text }]}>Titreşim</Text>
+        </View>
+        <Switch
+          value={hapticsEnabled}
+          onValueChange={handleToggleHaptics}
           trackColor={{ false: "#D1D5DB", true: colors.primary }}
           thumbColor="#FFFFFF"
         />
