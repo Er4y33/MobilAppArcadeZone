@@ -3,110 +3,190 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useScores } from "../../../context/ScoreContext";
+import { Difficulty, useScores } from "../../../context/ScoreContext";
+import { useSound } from "../../../context/SoundContext";
 import {
   hapticError,
   hapticLight,
   hapticSuccess,
-  hapticWarning
+  hapticWarning,
 } from "../../../lib/haptics";
-const TOTAL_ROUNDS = 10;
-const ROUND_SECONDS = 8;
+const TOPLAM_TUR = 10;
 
-type Op = "+" | "-" | "×";
 type Question = {
-  a: number;
-  b: number;
-  op: Op;
+  metin: string;
   answer: number;
 };
 
 type Feedback = "none" | "correct" | "wrong" | "timeout";
 
-function generateQuestion(round: number): Question {
-  // Tur 1-3: toplama/çıkarma, küçük sayılar
-  // Tur 4-7: toplama/çıkarma, büyük sayılar
-  // Tur 8-10: çarpma devreye giriyor
+type ZorlukAyari = {
+  sure: number;
+  etiket: string;
+  aciklama: string;
+};
 
-  let ops: Op[] = ["+", "-"];
-  let max = 20;
+const AYARLAR: Record<Difficulty, ZorlukAyari> = {
+  kolay: { sure: 9, etiket: "KOLAY", aciklama: "Toplama · Çıkarma" },
+  orta: { sure: 7, etiket: "ORTA", aciklama: "+ − × ÷" },
+  zor: { sure: 6, etiket: "ZOR", aciklama: "+ − × ÷ √ x²" },
+};
 
-  if (round >= 4) max = 50;
-  if (round >= 8) ops = ["+", "-", "×"];
+const rnd = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
-  const op = ops[Math.floor(Math.random() * ops.length)];
-
-  if (op === "×") {
-    const a = Math.floor(Math.random() * 9) + 2; // 2-10
-    const b = Math.floor(Math.random() * 9) + 2;
-    return { a, b, op, answer: a * b };
-  }
-
-  let a = Math.floor(Math.random() * max) + 1;
-  let b = Math.floor(Math.random() * max) + 1;
-  if (op === "-" && b > a) [a, b] = [b, a];
-
-  return { a, b, op, answer: op === "+" ? a + b : a - b };
+// ── SORU ÜRETİMİ ────────────────────────────────────────────────
+function soruUret(zorluk: Difficulty, tur: number): Question {
+  if (zorluk === "kolay") return kolaySoru(tur);
+  if (zorluk === "orta") return ortaSoru(tur);
+  return zorSoru(tur);
 }
 
-function generateOptions(answer: number): number[] {
-  const options = new Set<number>([answer]);
-  const spread = answer > 30 ? 12 : 4;
-  let guard = 0;
-  while (options.size < 4 && guard < 80) {
-    guard++;
-    const offset = Math.floor(Math.random() * (spread * 2 + 1)) - spread;
-    const candidate = answer + offset;
-    if (candidate >= 0 && candidate !== answer) {
-      options.add(candidate);
-    }
+function kolaySoru(tur: number): Question {
+  const max = tur >= 5 ? 30 : 15;
+  const op = Math.random() < 0.5 ? "+" : "−";
+
+  let a = rnd(1, max);
+  let b = rnd(1, max);
+  if (op === "−" && b > a) [a, b] = [b, a];
+
+  return {
+    metin: `${a} ${op} ${b} = ?`,
+    answer: op === "+" ? a + b : a - b,
+  };
+}
+
+function ortaSoru(tur: number): Question {
+  // İlk 3 tur toplama/çıkarma, sonrası çarpma/bölme ağırlıklı
+  const havuz = tur <= 3 ? ["+", "−"] : ["+", "−", "×", "÷", "×", "÷"];
+  const op = havuz[Math.floor(Math.random() * havuz.length)];
+
+  if (op === "×") {
+    const a = rnd(2, 12);
+    const b = rnd(2, 12);
+    return { metin: `${a} × ${b} = ?`, answer: a * b };
   }
-  return Array.from(options).sort(() => Math.random() - 0.5);
+
+  if (op === "÷") {
+    // Tam bölünme garantisi: önce bölen ve sonuç, sonra bölünen
+    const bolen = rnd(2, 12);
+    const sonuc = rnd(2, 12);
+    return { metin: `${bolen * sonuc} ÷ ${bolen} = ?`, answer: sonuc };
+  }
+
+  let a = rnd(1, 50);
+  let b = rnd(1, 50);
+  if (op === "−" && b > a) [a, b] = [b, a];
+
+  return {
+    metin: `${a} ${op} ${b} = ?`,
+    answer: op === "+" ? a + b : a - b,
+  };
+}
+
+function zorSoru(tur: number): Question {
+  const havuz =
+    tur <= 2 ? ["×", "÷"] : ["+", "−", "×", "÷", "√", "²", "√", "²", "×", "÷"];
+  const op = havuz[Math.floor(Math.random() * havuz.length)];
+
+  if (op === "√") {
+    // Sadece tam kare — 4'ten 400'e
+    const kok = rnd(2, 20);
+    return { metin: `√${kok * kok} = ?`, answer: kok };
+  }
+
+  if (op === "²") {
+    const taban = rnd(4, 20);
+    return { metin: `${taban}² = ?`, answer: taban * taban };
+  }
+
+  if (op === "×") {
+    const a = rnd(3, 15);
+    const b = rnd(3, 15);
+    return { metin: `${a} × ${b} = ?`, answer: a * b };
+  }
+
+  if (op === "÷") {
+    const bolen = rnd(3, 15);
+    const sonuc = rnd(3, 15);
+    return { metin: `${bolen * sonuc} ÷ ${bolen} = ?`, answer: sonuc };
+  }
+
+  let a = rnd(20, 99);
+  let b = rnd(20, 99);
+  if (op === "−" && b > a) [a, b] = [b, a];
+
+  return {
+    metin: `${a} ${op} ${b} = ?`,
+    answer: op === "+" ? a + b : a - b,
+  };
+}
+
+// Şıkları üret — cevabın büyüklüğüne göre yayılım ayarlanır
+function siklarUret(answer: number): number[] {
+  const secenekler = new Set<number>([answer]);
+  const yayilim = answer > 100 ? 25 : answer > 30 ? 12 : 4;
+  let guard = 0;
+
+  while (secenekler.size < 4 && guard < 120) {
+    guard++;
+    const fark = rnd(-yayilim, yayilim);
+    const aday = answer + fark;
+    if (aday >= 0 && aday !== answer) secenekler.add(aday);
+  }
+
+  // Yayılım yetmezse (küçük cevaplarda olur) doldur
+  let ek = 1;
+  while (secenekler.size < 4) {
+    secenekler.add(answer + yayilim + ek);
+    ek++;
+  }
+
+  return Array.from(secenekler).sort(() => Math.random() - 0.5);
 }
 
 export default function MathRushScreen() {
+  const [zorluk, setZorluk] = useState<Difficulty | null>(null);
   const [round, setRound] = useState(1);
-  const [question, setQuestion] = useState<Question>(() => generateQuestion(1));
+  const [question, setQuestion] = useState<Question>({ metin: "", answer: 0 });
   const [options, setOptions] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
+  const [timeLeft, setTimeLeft] = useState(9);
   const [feedback, setFeedback] = useState<Feedback>("none");
   const [gameOver, setGameOver] = useState(false);
   const [earnedXP, setEarnedXP] = useState(0);
-  const [roundSeconds, setRoundSeconds] = useState(8);
 
   // Async timer'ların gecikmeli çalışması yüzünden state yerine ref'ten okuyoruz
   const roundRef = useRef(1);
   const scoreRef = useRef(0);
   const correctRef = useRef(0);
+  const zorlukRef = useRef<Difficulty>("orta");
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addScore } = useScores();
+  const { cal } = useSound();
+  const ayar = zorluk ? AYARLAR[zorluk] : null;
 
+  // Son 3 saniye uyarısı
   useEffect(() => {
-    startRound(generateQuestion(1), 1);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-    };
-  }, []);
+    if (gameOver || !zorluk || feedback !== "none") return;
+    if (timeLeft <= 3 && timeLeft > 0) cal("tick");
+  }, [timeLeft, gameOver, zorluk, feedback, cal]);
 
-  const startRound = (q: Question, roundNo: number) => {
+  const turBaslat = (q: Question, z: Difficulty) => {
     setQuestion(q);
-    setOptions(generateOptions(q.answer));
+    setOptions(siklarUret(q.answer));
     setFeedback("none");
-    const seconds = roundNo >= 8 ? 10 : 8;
-    setRoundSeconds(seconds);
-    setTimeLeft(seconds);
+    setTimeLeft(AYARLAR[z].sure);
 
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
           if (intervalRef.current) clearInterval(intervalRef.current);
-          handleTimeout();
+          sureDoldu();
           return 0;
         }
         return t - 1;
@@ -114,69 +194,123 @@ export default function MathRushScreen() {
     }, 1000);
   };
 
-  const goToNextRound = () => {
-    if (roundRef.current >= TOTAL_ROUNDS) {
-      finishGame();
-      return;
-    }
-    roundRef.current += 1;
-    setRound(roundRef.current);
-    startRound(generateQuestion(roundRef.current), roundRef.current);
-  };
-
-  const handleTimeout = () => {
-    // Süre doldu → uyarı titreşimi
-    hapticWarning();
-    setFeedback("timeout");
-    advanceTimeoutRef.current = setTimeout(goToNextRound, 900);
-  };
-
-  const handleAnswer = (
-    value: number,
-    currentQuestion: Question,
-    currentTimeLeft: number,
-  ) => {
-    if (feedback !== "none") return;
+  const oyunBaslat = (z: Difficulty) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
 
-    if (value === currentQuestion.answer) {
-      // Doğru cevap → başarı titreşimi
-      hapticSuccess();
-      setFeedback("correct");
-      scoreRef.current += 10 + currentTimeLeft; // hız bonusu
-      correctRef.current += 1;
-      setScore(scoreRef.current);
-      setCorrectCount(correctRef.current);
-    } else {
-      // Yanlış cevap → hata titreşimi
-      hapticError();
-      setFeedback("wrong");
-    }
-    advanceTimeoutRef.current = setTimeout(goToNextRound, 900);
-  };
-
-  const finishGame = async () => {
-    setGameOver(true);
-    const reward = await addScore({
-      game: "mathrush",
-      score: scoreRef.current,
-      label: "points",
-    });
-    setEarnedXP(reward?.xpEarned ?? 0);
-  };
-
-  const resetGame = () => {
-    hapticLight();
+    zorlukRef.current = z;
     roundRef.current = 1;
     scoreRef.current = 0;
     correctRef.current = 0;
+
+    setZorluk(z);
     setRound(1);
     setScore(0);
     setCorrectCount(0);
     setGameOver(false);
     setEarnedXP(0);
-    startRound(generateQuestion(1), 1);
+    turBaslat(soruUret(z, 1), z);
   };
+
+  const sonrakiTur = () => {
+    if (roundRef.current >= TOPLAM_TUR) {
+      oyunuBitir();
+      return;
+    }
+    roundRef.current += 1;
+    setRound(roundRef.current);
+    turBaslat(soruUret(zorlukRef.current, roundRef.current), zorlukRef.current);
+  };
+
+  const sureDoldu = () => {
+    hapticWarning();
+    cal("wrong");
+    setFeedback("timeout");
+    advanceTimeoutRef.current = setTimeout(sonrakiTur, 900);
+  };
+
+  const cevapla = (value: number, q: Question, kalanSure: number) => {
+    if (feedback !== "none") return;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    if (value === q.answer) {
+      hapticSuccess();
+      cal("correct");
+      setFeedback("correct");
+      scoreRef.current += 10 + kalanSure; // hız bonusu
+      correctRef.current += 1;
+      setScore(scoreRef.current);
+      setCorrectCount(correctRef.current);
+    } else {
+      hapticError();
+      cal("wrong");
+      setFeedback("wrong");
+    }
+    advanceTimeoutRef.current = setTimeout(sonrakiTur, 900);
+  };
+
+  const oyunuBitir = async () => {
+    setGameOver(true);
+    cal("win");
+    const reward = await addScore({
+      game: "mathrush",
+      score: scoreRef.current,
+      label: "points",
+      difficulty: zorlukRef.current,
+    });
+    setEarnedXP(reward?.xpEarned ?? 0);
+  };
+
+  const yenidenOyna = () => {
+    hapticLight();
+    if (zorluk) oyunBaslat(zorluk);
+  };
+
+  const zorluguDegistir = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    setZorluk(null);
+    setGameOver(false);
+  };
+
+  // ── ZORLUK SEÇİM EKRANI ────────────────────────────────────────
+  if (!zorluk) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.secimBox}>
+          <Text style={styles.secimEmoji}>🔢</Text>
+          <Text style={styles.secimBaslik}>SAYI AVI</Text>
+          <Text style={styles.secimAlt}>Zorluk seç</Text>
+
+          {(["kolay", "orta", "zor"] as Difficulty[]).map((z, i) => (
+            <Animated.View
+              key={z}
+              style={{ width: "100%" }}
+              entering={FadeInDown.delay(i * 80).duration(350)}
+            >
+              <TouchableOpacity
+                style={[styles.zorlukBtn, styles[`zorluk_${z}`]]}
+                onPress={() => oyunBaslat(z)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.zorlukBtnText}>{AYARLAR[z].etiket}</Text>
+                <Text style={styles.zorlukBtnSub}>
+                  {AYARLAR[z].aciklama} · {AYARLAR[z].sure} sn
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          ))}
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backText}>Geri Dön</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // ── OYUN SONU EKRANI ──────────────────────────────────────────
   if (gameOver) {
@@ -194,7 +328,7 @@ export default function MathRushScreen() {
           <Text style={styles.resultTitle}>
             {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
           </Text>
-          <Text style={styles.resultSub}>Sayı Avı</Text>
+          <Text style={styles.resultSub}>Sayı Avı · {ayar!.etiket}</Text>
 
           <Animated.View
             style={styles.starsRow}
@@ -218,8 +352,12 @@ export default function MathRushScreen() {
             <View style={styles.statRow}>
               <Text style={styles.statLabel}>Doğru Cevap</Text>
               <Text style={styles.statValue}>
-                {correctCount} / {TOTAL_ROUNDS}
+                {correctCount} / {TOPLAM_TUR}
               </Text>
+            </View>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Zorluk</Text>
+              <Text style={styles.statValue}>{ayar!.etiket}</Text>
             </View>
           </View>
 
@@ -230,9 +368,17 @@ export default function MathRushScreen() {
             <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
           </Animated.View>
 
-          <TouchableOpacity style={styles.btnPrimary} onPress={resetGame}>
+          <TouchableOpacity style={styles.btnPrimary} onPress={yenidenOyna}>
             <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btnSecondary}
+            onPress={zorluguDegistir}
+          >
+            <Text style={styles.btnSecondaryText}>ZORLUK DEĞİŞTİR</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={() => router.replace("/(tabs)")}
@@ -254,11 +400,12 @@ export default function MathRushScreen() {
         </View>
         <View style={styles.headerCenter}>
           <Text style={styles.gameTitle}>SAYI AVI</Text>
+          <Text style={styles.gameSub}>{ayar!.etiket}</Text>
         </View>
         <View style={styles.headerRight}>
           <Text style={styles.headerLabel}>TUR</Text>
           <Text style={[styles.headerValue, { color: "#06B6D4" }]}>
-            {round}/{TOTAL_ROUNDS}
+            {round}/{TOPLAM_TUR}
           </Text>
         </View>
       </View>
@@ -267,7 +414,7 @@ export default function MathRushScreen() {
         <View
           style={[
             styles.progressFill,
-            { width: `${(timeLeft / roundSeconds) * 100}%` },
+            { width: `${(timeLeft / ayar!.sure) * 100}%` },
           ]}
         />
       </View>
@@ -280,9 +427,7 @@ export default function MathRushScreen() {
           feedback === "timeout" && styles.questionTimeout,
         ]}
       >
-        <Text style={styles.questionText}>
-          {question.a} {question.op} {question.b} = ?
-        </Text>
+        <Text style={styles.questionText}>{question.metin}</Text>
         {feedback === "timeout" && (
           <Text style={styles.feedbackText}>Süre doldu!</Text>
         )}
@@ -298,7 +443,7 @@ export default function MathRushScreen() {
                 opt === question.answer &&
                 styles.optionCorrect,
             ]}
-            onPress={() => handleAnswer(opt, question, timeLeft)}
+            onPress={() => cevapla(opt, question, timeLeft)}
             disabled={feedback !== "none"}
             activeOpacity={0.85}
           >
@@ -307,8 +452,8 @@ export default function MathRushScreen() {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>Geri Dön</Text>
+      <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
+        <Text style={styles.backText}>Zorluk Değiştir</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -317,6 +462,42 @@ export default function MathRushScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0B1020", padding: 16 },
 
+  // Zorluk seçimi
+  secimBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+  secimEmoji: { fontSize: 56, marginBottom: 12 },
+  secimBaslik: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#06B6D4",
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  secimAlt: { fontSize: 14, color: "#9CA3AF", marginBottom: 28 },
+  zorlukBtn: {
+    width: "100%",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: 2,
+  },
+  zorluk_kolay: { backgroundColor: "#064E3B", borderColor: "#22C55E" },
+  zorluk_orta: { backgroundColor: "#172554", borderColor: "#3B82F6" },
+  zorluk_zor: { backgroundColor: "#450A0A", borderColor: "#EF4444" },
+  zorlukBtnText: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: 2,
+  },
+  zorlukBtnSub: { fontSize: 12, color: "#D1D5DB", marginTop: 4 },
+
+  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -339,6 +520,13 @@ const styles = StyleSheet.create({
     color: "#06B6D4",
     letterSpacing: 1,
   },
+  gameSub: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#9CA3AF",
+    letterSpacing: 1.5,
+    marginTop: 2,
+  },
 
   progressBg: {
     height: 6,
@@ -352,6 +540,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#151B2E",
     borderRadius: 20,
     paddingVertical: 40,
+    paddingHorizontal: 16,
     alignItems: "center",
     marginBottom: 24,
     borderWidth: 2,
@@ -360,7 +549,12 @@ const styles = StyleSheet.create({
   questionCorrect: { backgroundColor: "#064E3B", borderColor: "#22C55E" },
   questionWrong: { backgroundColor: "#450A0A", borderColor: "#EF4444" },
   questionTimeout: { backgroundColor: "#451A03", borderColor: "#F59E0B" },
-  questionText: { fontSize: 40, fontWeight: "900", color: "#FFFFFF" },
+  questionText: {
+    fontSize: 38,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
   feedbackText: {
     fontSize: 14,
     color: "#FBBF24",
@@ -397,6 +591,7 @@ const styles = StyleSheet.create({
   },
   backText: { color: "#9CA3AF", fontWeight: "700" },
 
+  // Oyun sonu
   resultBox: {
     flex: 1,
     justifyContent: "center",
@@ -458,6 +653,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 1,
     borderColor: "#1F2B47",
+    marginBottom: 10,
   },
   btnSecondaryText: { color: "#9CA3AF", fontWeight: "700" },
 });

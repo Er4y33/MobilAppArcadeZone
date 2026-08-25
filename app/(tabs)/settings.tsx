@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import {
   Alert,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -12,11 +13,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { useHaptics } from "../../context/HapticsContext";
+import { useSound } from "../../context/SoundContext";
 import { useTheme } from "../../context/ThemeContext";
 import { hapticLight } from "../../lib/haptics";
 import { supabase } from "../../lib/supabase";
-
 export default function SettingsScreen() {
+  const { sesAcik, muzikAcik, sesAyarla, muzikAyarla, cal } = useSound();
   const { signOut } = useAuth();
   const { mode, colors, toggleTheme } = useTheme();
   const { hapticsEnabled, setHaptics } = useHaptics();
@@ -60,76 +62,124 @@ export default function SettingsScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Text style={[styles.title, { color: colors.text }]}>Ayarlar</Text>
-
-      {/* Tema Toggle */}
-      <View style={[styles.row, { backgroundColor: colors.surface }]}>
-        <View style={styles.rowLeft}>
-          <Ionicons
-            name={isDark ? "moon" : "sunny"}
-            size={22}
-            color={colors.accent}
+      <ScrollView
+        contentContainerStyle={styles.icerik}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Tema Toggle */}
+        <View style={[styles.row, { backgroundColor: colors.surface }]}>
+          <View style={styles.rowLeft}>
+            <Ionicons
+              name={isDark ? "moon" : "sunny"}
+              size={22}
+              color={colors.accent}
+            />
+            <Text style={[styles.label, { color: colors.text }]}>
+              {isDark ? "Karanlık Tema" : "Aydınlık Tema"}
+            </Text>
+          </View>
+          <Switch
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: "#D1D5DB", true: colors.primary }}
+            thumbColor="#FFFFFF"
           />
-          <Text style={[styles.label, { color: colors.text }]}>
-            {isDark ? "Karanlık Tema" : "Aydınlık Tema"}
+        </View>
+
+        {/* Titreşim Toggle */}
+        <View style={[styles.row, { backgroundColor: colors.surface }]}>
+          <View style={styles.rowLeft}>
+            <Ionicons
+              name={
+                hapticsEnabled ? "phone-portrait" : "phone-portrait-outline"
+              }
+              size={22}
+              color={colors.primaryAlt}
+            />
+            <Text style={[styles.label, { color: colors.text }]}>Titreşim</Text>
+          </View>
+          <Switch
+            value={hapticsEnabled}
+            onValueChange={handleToggleHaptics}
+            trackColor={{ false: "#D1D5DB", true: colors.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
+        {/* Ses Toggle */}
+        <View style={[styles.row, { backgroundColor: colors.surface }]}>
+          <View style={styles.rowLeft}>
+            <Ionicons
+              name={sesAcik ? "volume-high" : "volume-mute"}
+              size={22}
+              color={colors.primaryAlt}
+            />
+            <Text style={[styles.label, { color: colors.text }]}>
+              Ses Efektleri
+            </Text>
+          </View>
+          <Switch
+            value={sesAcik}
+            onValueChange={(v) => {
+              sesAyarla(v);
+              if (v) cal("click");
+            }}
+            trackColor={{ false: "#D1D5DB", true: colors.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
+        {/* Müzik Toggle */}
+        <View style={[styles.row, { backgroundColor: colors.surface }]}>
+          <View style={styles.rowLeft}>
+            <Ionicons
+              name={muzikAcik ? "musical-notes" : "musical-notes-outline"}
+              size={22}
+              color={colors.primaryAlt}
+            />
+            <Text style={[styles.label, { color: colors.text }]}>
+              Arka Plan Müziği
+            </Text>
+          </View>
+          <Switch
+            value={muzikAcik}
+            onValueChange={muzikAyarla}
+            trackColor={{ false: "#D1D5DB", true: colors.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
+        {/* Hakkinda */}
+        <TouchableOpacity
+          style={[styles.row, { backgroundColor: colors.surface }]}
+          onPress={() => router.push("/about")}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="information-circle" size={22} color={colors.info} />
+            <Text style={[styles.label, { color: colors.text }]}>Hakkında</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        {/* Çıkış Yap */}
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: colors.danger }]}
+          onPress={handleSignOut}
+        >
+          <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
+          <Text style={styles.logoutText}>Hesaptan Çıkış Yap</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.deleteButton, { borderColor: colors.danger }]}
+          onPress={handleDeleteAccount}
+        >
+          <Ionicons name="trash-outline" size={20} color={colors.danger} />
+          <Text style={[styles.deleteText, { color: colors.danger }]}>
+            Hesabımı Sil
           </Text>
-        </View>
-        <Switch
-          value={isDark}
-          onValueChange={toggleTheme}
-          trackColor={{ false: "#D1D5DB", true: colors.primary }}
-          thumbColor="#FFFFFF"
-        />
-      </View>
-
-      {/* Titreşim Toggle */}
-      <View style={[styles.row, { backgroundColor: colors.surface }]}>
-        <View style={styles.rowLeft}>
-          <Ionicons
-            name={hapticsEnabled ? "phone-portrait" : "phone-portrait-outline"}
-            size={22}
-            color={colors.primaryAlt}
-          />
-          <Text style={[styles.label, { color: colors.text }]}>Titreşim</Text>
-        </View>
-        <Switch
-          value={hapticsEnabled}
-          onValueChange={handleToggleHaptics}
-          trackColor={{ false: "#D1D5DB", true: colors.primary }}
-          thumbColor="#FFFFFF"
-        />
-      </View>
-
-      {/* Hakkinda */}
-      <TouchableOpacity
-        style={[styles.row, { backgroundColor: colors.surface }]}
-        onPress={() => router.push("/about")}
-      >
-        <View style={styles.rowLeft}>
-          <Ionicons name="information-circle" size={22} color={colors.info} />
-          <Text style={[styles.label, { color: colors.text }]}>Hakkında</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-      </TouchableOpacity>
-
-      {/* Çıkış Yap */}
-      <TouchableOpacity
-        style={[styles.logoutButton, { backgroundColor: colors.danger }]}
-        onPress={handleSignOut}
-      >
-        <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
-        <Text style={styles.logoutText}>Hesaptan Çıkış Yap</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.deleteButton, { borderColor: colors.danger }]}
-        onPress={handleDeleteAccount}
-      >
-        <Ionicons name="trash-outline" size={20} color={colors.danger} />
-        <Text style={[styles.deleteText, { color: colors.danger }]}>
-          Hesabımı Sil
-        </Text>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -137,12 +187,10 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    marginBottom: 20,
+  icerik: {
+    padding: 20,
+    paddingBottom: 32,
   },
   row: {
     borderRadius: 16,

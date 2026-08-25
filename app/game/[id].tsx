@@ -1,6 +1,12 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../context/ScoreContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -9,21 +15,22 @@ const GAME_INFO = {
   reaction: {
     emoji: "⚡",
     howTo:
-      "Hedef belirdiginde ekrana dokun. Ne kadar hizli, o kadar yuksek puan!",
+      "Ekran yeşile döndüğü anda dokun. Ne kadar hızlısan skorun o kadar iyi — erken dokunursan tur iptal olur.",
     scoreLabel: "ms",
     lowerBetter: true,
   },
   memory: {
     emoji: "🧠",
     howTo:
-      "Kartlarin yerini aklinda tut ve eslerini bul. Az hamle daha iyi skor.",
-    scoreLabel: "moves",
+      "Kartlar 3 saniye açık kalır, yerlerini aklında tut. Sonra eşlerini bul — az hamleyle bitirmek daha iyi skor demek.",
+    scoreLabel: "hamle",
     lowerBetter: true,
   },
   sonsaniye: {
     emoji: "⏱",
-    howTo: "Karisik harflerden kelimeyi bul! Her dogru cevap puan kazandirir.",
-    scoreLabel: "points",
+    howTo:
+      "Karışık harflerden kelimeyi bul! Her doğru cevap puan ve süre kazandırır. İki mod var: harflere dokunarak ya da klavyeyle yazarak.",
+    scoreLabel: "puan",
     lowerBetter: false,
   },
   mathrush: {
@@ -55,7 +62,7 @@ export default function GameDetail() {
 
   const bestDisplay = best
     ? `${best.score} ${info.scoreLabel}`
-    : "Henuz oynamadin";
+    : "Henüz oynamadın";
 
   const handleStartGame = () => {
     if (id === "reaction") router.push("/game/play/reaction");
@@ -69,52 +76,58 @@ export default function GameDetail() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <View style={styles.headerWrap}>
-        <Text style={styles.emoji}>{info.emoji}</Text>
-        <Text style={[styles.title, { color: colors.primary }]}>
-          {title || "Oyun Detayi"}
-        </Text>
-      </View>
-
-      <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.cardTitle, { color: colors.textMuted }]}>
-          NASIL OYNANIR?
-        </Text>
-        <Text style={[styles.howTo, { color: colors.textSecondary }]}>
-          {info.howTo}
-        </Text>
-      </View>
-
-      <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.cardTitle, { color: colors.textMuted }]}>
-          EN IYI SKORUN
-        </Text>
-        <Text style={[styles.bestScore, { color: colors.accent }]}>
-          {bestDisplay}
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.startButton, { backgroundColor: colors.success }]}
-        onPress={handleStartGame}
+      <ScrollView
+        contentContainerStyle={styles.icerik}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.startText}>OYNA</Text>
-      </TouchableOpacity>
+        <View style={styles.headerWrap}>
+          <Text style={styles.emoji}>{info.emoji}</Text>
+          <Text style={[styles.title, { color: colors.primary }]}>
+            {title || "Oyun Detayı"}
+          </Text>
+        </View>
 
-      <TouchableOpacity
-        style={[styles.backButton, { backgroundColor: colors.surfaceAlt }]}
-        onPress={() => router.back()}
-      >
-        <Text style={[styles.backText, { color: colors.textMuted }]}>
-          Geri Don
-        </Text>
-      </TouchableOpacity>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.cardTitle, { color: colors.textMuted }]}>
+            NASIL OYNANIR?
+          </Text>
+          <Text style={[styles.howTo, { color: colors.textSecondary }]}>
+            {info.howTo}
+          </Text>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.cardTitle, { color: colors.textMuted }]}>
+            EN İYİ SKORUN
+          </Text>
+          <Text style={[styles.bestScore, { color: colors.accent }]}>
+            {bestDisplay}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.startButton, { backgroundColor: colors.success }]}
+          onPress={handleStartGame}
+        >
+          <Text style={styles.startText}>OYNA</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.backButton, { backgroundColor: colors.surfaceAlt }]}
+          onPress={() => router.back()}
+        >
+          <Text style={[styles.backText, { color: colors.textMuted }]}>
+            Geri Dön
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1 },
+  icerik: { padding: 20, paddingBottom: 32 },
   headerWrap: { alignItems: "center", marginBottom: 24, marginTop: 16 },
   emoji: { fontSize: 56, marginBottom: 8 },
   title: { fontSize: 28, fontWeight: "900", letterSpacing: 1 },

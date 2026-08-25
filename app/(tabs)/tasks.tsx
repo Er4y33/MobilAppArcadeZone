@@ -21,9 +21,9 @@ import {
 } from "../../constants/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { useScores } from "../../context/ScoreContext";
+import { useSound } from "../../context/SoundContext";
 import { useTheme } from "../../context/ThemeContext";
 import { supabase } from "../../lib/supabase";
-
 type TaskProgress = {
   task: TaskDefinition;
   completed: boolean;
@@ -39,7 +39,7 @@ export default function TasksScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
   const [claimedIds, setClaimedIds] = React.useState<string[]>([]);
   const [claimingId, setClaimingId] = React.useState<string | null>(null);
-
+  const { cal } = useSound();
   const weekStart = useMemo(() => getWeekStart(), []);
   const nextReset = useMemo(() => getNextResetDate(), []);
   const daysLeft = useMemo(() => getDaysUntilReset(), []);
@@ -100,7 +100,7 @@ export default function TasksScreen() {
     });
 
     // Tamamlanmamışlar üstte, tamamlananlar altta
-    return list.sort((a, b) => Number(a.completed) - Number(b.completed));
+    return list;
   }, [scores, weeklyTasks, weekStart]);
 
   const completedCount = taskProgressList.filter((t) => t.completed).length;
@@ -110,6 +110,15 @@ export default function TasksScreen() {
     .reduce((sum, t) => sum + t.reward, 0);
   const totalCoins = taskProgressList.reduce((sum, t) => sum + t.reward, 0);
 
+  const siraliGorevler = useMemo(() => {
+    const oncelik = (t: TaskProgress): number => {
+      const alindi = claimedIds.includes(t.task.id);
+      if (t.completed && !alindi) return 0; // ödül bekliyor → en üst
+      if (!t.completed) return 1; // devam ediyor → orta
+      return 2; // ödül alındı → en alt
+    };
+    return [...taskProgressList].sort((a, b) => oncelik(a) - oncelik(b));
+  }, [taskProgressList, claimedIds]);
   const fetchClaimed = React.useCallback(async () => {
     if (!user) return;
     const weekStartStr = `${weekStart.getFullYear()}-${String(
@@ -145,6 +154,7 @@ export default function TasksScreen() {
       Alert.alert("Ödül alınamadı", error.message);
       return;
     }
+    cal("win");
     await fetchClaimed();
     await refreshProfile();
     Alert.alert("Ödül alındı!", `🪙 ${reward} coin hesabına eklendi.`);
@@ -157,10 +167,6 @@ export default function TasksScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Text style={[styles.title, { color: colors.accent }]}>
-        HAFTALIK GÖREVLER
-      </Text>
-
       {/* Yenilenme bilgisi */}
       <View style={[styles.resetCard, { backgroundColor: colors.surfaceAlt }]}>
         <Text style={[styles.resetText, { color: colors.textSecondary }]}>
@@ -213,7 +219,7 @@ export default function TasksScreen() {
             />
           }
         >
-          {taskProgressList.map((item) => (
+          {siraliGorevler.map((item) => (
             <View
               key={item.task.id}
               style={[
@@ -344,14 +350,6 @@ export default function TasksScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  title: {
-    fontSize: 24,
-    fontWeight: "900",
-    textAlign: "center",
-    letterSpacing: 1.5,
-    marginTop: 12,
-    marginBottom: 12,
-  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   resetCard: {

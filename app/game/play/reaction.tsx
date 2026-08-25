@@ -3,11 +3,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
+import { useSound } from "../../../context/SoundContext";
 import {
   hapticError,
   hapticLight,
   hapticMedium,
-  hapticSuccess
+  hapticSuccess,
 } from "../../../lib/haptics";
 type GameState = "waiting" | "ready" | "tapped" | "tooSoon";
 
@@ -20,6 +21,7 @@ export default function ReactionTapScreen() {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const { addScore, getBestScore } = useScores();
+  const { cal } = useSound();
 
   useEffect(() => {
     startRound();
@@ -39,6 +41,7 @@ export default function ReactionTapScreen() {
       setGameState("ready");
       // Yeşile döndü → dokunma sinyali
       hapticMedium();
+      cal("tick");
       startTimeRef.current = Date.now();
     }, delay);
   };
@@ -47,6 +50,7 @@ export default function ReactionTapScreen() {
     if (gameState === "waiting") {
       // Çok erken dokundu → hata titreşimi
       hapticError();
+      cal("wrong");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setGameState("tooSoon");
       return;
@@ -58,13 +62,14 @@ export default function ReactionTapScreen() {
       // 100 ms altı insan tepki sınırının altında → tahmin sayılır
       if (ms < 100) {
         hapticError();
+        cal("wrong");
         setGameState("tooSoon");
         return;
       }
 
       // Geçerli sonuç → başarı titreşimi
       hapticSuccess();
-
+      cal("correct");
       setResult(ms);
       setGameState("tapped");
 

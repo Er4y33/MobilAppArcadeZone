@@ -1,6 +1,12 @@
 import { router } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -18,60 +24,65 @@ export default function HomeScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Text style={[styles.logo, { color: colors.primary }]}>ARCADEZONE</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        Ana Menü
-      </Text>
+      <ScrollView
+        contentContainerStyle={styles.icerik}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.logo, { color: colors.primary }]}>ARCADEZONE</Text>
+        <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.player, { color: colors.text }]}>
+            {username}
+          </Text>
+          <Text style={[styles.info, { color: colors.textMuted }]}>
+            Seviye {level} (XP: {xp})
+          </Text>
+          <Text style={[styles.info, { color: colors.textMuted }]}>
+            Coin: {coins}
+          </Text>
+        </View>
 
-      <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.player, { color: colors.text }]}>{username}</Text>
-        <Text style={[styles.info, { color: colors.textMuted }]}>
-          Seviye {level} (XP: {xp})
-        </Text>
-        <Text style={[styles.info, { color: colors.textMuted }]}>
-          Coin: {coins}
-        </Text>
-      </View>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primary }]}
+          onPress={() => router.push("/(tabs)/games")}
+        >
+          <Text style={styles.buttonText}>OYUNLAR</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.primary }]}
-        onPress={() => router.push("/(tabs)/games")}
-      >
-        <Text style={styles.buttonText}>OYUNLAR</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.success }]}
+          onPress={() => router.push("/(tabs)/tasks")}
+        >
+          <Text style={styles.buttonText}>GÖREVLER</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primaryAlt }]}
+          onPress={() => router.push("./(tabs)/store")}
+        >
+          <Text style={styles.buttonText}>MAĞAZA</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.accent }]}
+          onPress={() => router.push("/(tabs)/leaderboard")}
+        >
+          <Text style={styles.buttonText}>LİDERLİK TABLOSU</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.success }]}
-        onPress={() => router.push("/(tabs)/tasks")}
-      >
-        <Text style={styles.buttonText}>GÖREVLER</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.primaryAlt }]}
-        onPress={() => router.push("./(tabs)/store")}
-      >
-        <Text style={styles.buttonText}>MAĞAZA</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.accent }]}
-        onPress={() => router.push("/(tabs)/leaderboard")}
-      >
-        <Text style={styles.buttonText}>LİDERLİK TABLOSU</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.info }]}
+          onPress={() => router.push("/(tabs)/profile")}
+        >
+          <Text style={styles.buttonText}>PROFİL</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.info }]}
-        onPress={() => router.push("/(tabs)/profile")}
-      >
-        <Text style={styles.buttonText}>PROFİL</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.surfaceAlt }]}
-        onPress={() => router.push("/(tabs)/settings")}
-      >
-        <Text style={[styles.buttonText, { color: colors.text }]}>AYARLAR</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.surfaceAlt }]}
+          onPress={() => router.push("/(tabs)/settings")}
+        >
+          <Text style={[styles.buttonText, { color: colors.text }]}>
+            AYARLAR
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -79,17 +90,16 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  icerik: {
     padding: 24,
+    paddingBottom: 32,
+    flexGrow: 1,
     justifyContent: "center",
   },
   logo: {
     fontSize: 34,
     fontWeight: "800",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
     textAlign: "center",
     marginBottom: 24,
   },

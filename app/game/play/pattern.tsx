@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   StyleSheet,
@@ -7,37 +7,86 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  ZoomIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useScores } from "../../../context/ScoreContext";
-import {
-  hapticError,
-  hapticLight,
-  hapticSuccess
-} from "../../../lib/haptics";
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const GRID_PADDING = 16; // container padding
-const GRID_GAP = 12;
-const BUTTON_SIZE = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP) / 2;
+import { Difficulty, useScores } from "../../../context/ScoreContext";
+import { useSound } from "../../../context/SoundContext";
+import { hapticError, hapticLight, hapticSuccess } from "../../../lib/haptics";
+const { width: EKRAN_G, height: EKRAN_Y } = Dimensions.get("window");
+const BOSLUK = 14;
+const MAX_BUTON = 150;
 
-const COLORS = [
-  { id: 0, base: "#450A0A", active: "#EF4444" },
-  { id: 1, base: "#052E1B", active: "#22C55E" },
-  { id: 2, base: "#1E3A5F", active: "#3B82F6" },
-  { id: 3, base: "#451A03", active: "#FBBF24" },
+// 9 renklik havuz — zorluk kaç tanesini kullanacağını belirler
+const RENKLER = [
+  { id: 0, base: "#450A0A", active: "#ff0000" }, // kırmızı
+  { id: 1, base: "#052E1B", active: "#22C55E" }, // yeşil
+  { id: 2, base: "#172554", active: "#3B82F6" }, // mavi
+  { id: 3, base: "#afa715", active: "#fff200" }, // sarı
+  { id: 4, base: "#3B0764", active: "#A855F7" }, // mor
+  { id: 5, base: "#842910", active: "#F97316" }, // turuncu
+  { id: 6, base: "#083344", active: "#06B6D4" }, // camgöbeği
+  { id: 7, base: "#500724", active: "#EC4899" }, // pembe
+  { id: 8, base: "#477b11", active: "#84CC16" }, // fıstık yeşili
 ];
 
-const SHOW_DURATION = 550;
-const GAP_DURATION = 250;
+type ZorlukAyari = {
+  renkSayisi: number;
+  sutun: number;
+  satir: number;
+  gosterSure: number;
+  etiket: string;
+  aciklama: string;
+};
 
-function randomColorIndex() {
-  return Math.floor(Math.random() * COLORS.length);
+const AYARLAR: Record<Difficulty, ZorlukAyari> = {
+  kolay: {
+    renkSayisi: 4,
+    sutun: 2,
+    satir: 2,
+    gosterSure: 600,
+    etiket: "KOLAY",
+    aciklama: "4 renk · 2x2",
+  },
+  orta: {
+    renkSayisi: 6,
+    sutun: 2,
+    satir: 3,
+    gosterSure: 550,
+    etiket: "ORTA",
+    aciklama: "6 renk · 2x3",
+  },
+  zor: {
+    renkSayisi: 9,
+    sutun: 3,
+    satir: 3,
+    gosterSure: 480,
+    etiket: "ZOR",
+    aciklama: "9 renk · 3x3",
+  },
+};
+
+const ARA_SURE = 250;
+const BASLANGIC_BEKLEME = 1000; // ilk renk hemen yanmasın
+
+function butonBoyutu(sutun: number, satir: number): number {
+  const genislikten = (EKRAN_G - 32 - BOSLUK * (sutun - 1)) / sutun;
+  const gridAlani = EKRAN_Y * 0.5;
+  const yukseklikten = (gridAlani - BOSLUK * (satir - 1)) / satir;
+  return Math.floor(Math.min(genislikten, yukseklikten, MAX_BUTON));
 }
 
 export default function PatternSequenceScreen() {
+  const [zorluk, setZorluk] = useState<Difficulty | null>(null);
   const [level, setLevel] = useState(1);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [isShowingSequence, setIsShowingSequence] = useState(true);
+  const [hazirlaniyor, setHazirlaniyor] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [earnedXP, setEarnedXP] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
@@ -46,85 +95,167 @@ export default function PatternSequenceScreen() {
   const playerStepRef = useRef(0);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const { addScore } = useScores();
-
-  useEffect(() => {
-    startGame();
-    return () => {
-      timeoutsRef.current.forEach(clearTimeout);
-    };
-  }, []);
+  const { cal } = useSound();
+  const ayar = zorluk ? AYARLAR[zorluk] : null;
 
   const clearAllTimeouts = () => {
     timeoutsRef.current.forEach(clearTimeout);
     timeoutsRef.current = [];
   };
 
-  const startGame = () => {
-    clearAllTimeouts();
-    sequenceRef.current = [randomColorIndex()];
-    playerStepRef.current = 0;
-    setLevel(1);
-    setGameOver(false);
-    setEarnedXP(0);
-    setFinalScore(0);
-    playSequence();
-  };
+  useEffect(() => {
+    return () => clearAllTimeouts();
+  }, []);
 
-  const playSequence = () => {
+  const rastgeleRenk = useCallback((renkSayisi: number) => {
+    return Math.floor(Math.random() * renkSayisi);
+  }, []);
+
+  const playSequence = useCallback((a: ZorlukAyari, ilkTur: boolean) => {
     setIsShowingSequence(true);
     playerStepRef.current = 0;
     const seq = sequenceRef.current;
+    const basla = ilkTur ? BASLANGIC_BEKLEME : 0;
 
-    seq.forEach((colorIndex, i) => {
-      const showAt = i * (SHOW_DURATION + GAP_DURATION);
-      const hideAt = showAt + SHOW_DURATION;
+    if (ilkTur) {
+      setHazirlaniyor(true);
+      timeoutsRef.current.push(
+        setTimeout(() => setHazirlaniyor(false), BASLANGIC_BEKLEME),
+      );
+    }
+
+    seq.forEach((renkIndex, i) => {
+      const showAt = basla + i * (a.gosterSure + ARA_SURE);
+      const hideAt = showAt + a.gosterSure;
 
       timeoutsRef.current.push(
-        setTimeout(() => setActiveIndex(colorIndex), showAt),
+        setTimeout(() => {
+          setActiveIndex(renkIndex);
+          cal("tick");
+        }, showAt),
       );
       timeoutsRef.current.push(setTimeout(() => setActiveIndex(null), hideAt));
     });
 
-    const totalDuration = seq.length * (SHOW_DURATION + GAP_DURATION);
+    const toplam = basla + seq.length * (a.gosterSure + ARA_SURE);
     timeoutsRef.current.push(
-      setTimeout(() => setIsShowingSequence(false), totalDuration),
+      setTimeout(() => setIsShowingSequence(false), toplam),
     );
+  }, []);
+
+  const oyunBaslat = useCallback(
+    (z: Difficulty) => {
+      clearAllTimeouts();
+      const a = AYARLAR[z];
+      setZorluk(z);
+      sequenceRef.current = [rastgeleRenk(a.renkSayisi)];
+      playerStepRef.current = 0;
+      setLevel(1);
+      setActiveIndex(null);
+      setGameOver(false);
+      setEarnedXP(0);
+      setFinalScore(0);
+      playSequence(a, true);
+    },
+    [playSequence, rastgeleRenk],
+  );
+
+  const yenidenOyna = () => {
+    if (zorluk) oyunBaslat(zorluk);
   };
 
-  const handlePress = (colorIndex: number) => {
-    if (isShowingSequence || gameOver) return;
+  const zorluguDegistir = () => {
+    clearAllTimeouts();
+    setZorluk(null);
+    setGameOver(false);
+    setActiveIndex(null);
+  };
 
-    // Her dokunuşta hafif titreşim
+  const handlePress = (renkIndex: number) => {
+    if (isShowingSequence || gameOver || !ayar || !zorluk) return;
+
     hapticLight();
+    cal("click");
+    const beklenen = sequenceRef.current[playerStepRef.current];
 
-    const expected = sequenceRef.current[playerStepRef.current];
-
-    if (colorIndex !== expected) {
-      // Yanlış renk → hata titreşimi
+    if (renkIndex !== beklenen) {
       hapticError();
+      cal("wrong");
       const score = sequenceRef.current.length - 1;
       setFinalScore(score);
       setGameOver(true);
-      addScore({ game: "pattern", score, label: "points" }).then((reward) =>
-        setEarnedXP(reward?.xpEarned ?? 0),
-      );
+      addScore({
+        game: "pattern",
+        score,
+        label: "points",
+        difficulty: zorluk,
+      }).then((reward) => setEarnedXP(reward?.xpEarned ?? 0));
       return;
     }
 
     playerStepRef.current += 1;
 
     if (playerStepRef.current === sequenceRef.current.length) {
-      // Tur tamamlandı → başarı titreşimi, sıraya yeni bir renk ekle
       hapticSuccess();
-      sequenceRef.current = [...sequenceRef.current, randomColorIndex()];
+      cal("correct");
+      sequenceRef.current = [
+        ...sequenceRef.current,
+        rastgeleRenk(ayar.renkSayisi),
+      ];
       setLevel(sequenceRef.current.length);
-      timeoutsRef.current.push(setTimeout(playSequence, 700));
+      timeoutsRef.current.push(
+        setTimeout(() => playSequence(ayar, false), 700),
+      );
     }
   };
 
+  // ── ZORLUK SEÇİM EKRANI ────────────────────────────────────────
+  if (!zorluk) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.secimBox}>
+          <Text style={styles.secimEmoji}>🎯</Text>
+          <Text style={styles.secimBaslik}>SIRAYI TAKİP ET</Text>
+          <Text style={styles.secimAlt}>Zorluk seç</Text>
+
+          {(["kolay", "orta", "zor"] as Difficulty[]).map((z, i) => (
+            <Animated.View
+              key={z}
+              style={{ width: "100%" }}
+              entering={FadeInDown.delay(i * 80).duration(350)}
+            >
+              <TouchableOpacity
+                style={[styles.zorlukBtn, styles[`zorluk_${z}`]]}
+                onPress={() => oyunBaslat(z)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.zorlukBtnText}>{AYARLAR[z].etiket}</Text>
+                <Text style={styles.zorlukBtnSub}>{AYARLAR[z].aciklama}</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          ))}
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backText}>Geri Dön</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const boyut = butonBoyutu(ayar!.sutun, ayar!.satir);
+  const aktifRenkler = RENKLER.slice(0, ayar!.renkSayisi);
+
   // ── OYUN SONU EKRANI ──────────────────────────────────────────
   if (gameOver) {
-    const stars = finalScore >= 9 ? 3 : finalScore >= 5 ? 2 : 1;
+    // Eşikler zorluğa göre: 9 renkte 5 tur, 4 renkte 5 turdan zordur
+    const esik3 = zorluk === "kolay" ? 9 : zorluk === "orta" ? 7 : 5;
+    const esik2 = zorluk === "kolay" ? 5 : zorluk === "orta" ? 4 : 3;
+    const stars = finalScore >= esik3 ? 3 : finalScore >= esik2 ? 2 : 1;
+
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.resultBox}>
@@ -138,7 +269,7 @@ export default function PatternSequenceScreen() {
           <Text style={styles.resultTitle}>
             {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
           </Text>
-          <Text style={styles.resultSub}>Sırayı Takip Et</Text>
+          <Text style={styles.resultSub}>Sırayı Takip Et · {ayar!.etiket}</Text>
 
           <Animated.View
             style={styles.starsRow}
@@ -163,6 +294,10 @@ export default function PatternSequenceScreen() {
               <Text style={styles.statLabel}>Tamamlanan Tur</Text>
               <Text style={styles.statValue}>{finalScore}</Text>
             </View>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Zorluk</Text>
+              <Text style={styles.statValue}>{ayar!.etiket}</Text>
+            </View>
           </View>
 
           <Animated.View
@@ -172,9 +307,17 @@ export default function PatternSequenceScreen() {
             <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
           </Animated.View>
 
-          <TouchableOpacity style={styles.btnPrimary} onPress={startGame}>
+          <TouchableOpacity style={styles.btnPrimary} onPress={yenidenOyna}>
             <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btnSecondary}
+            onPress={zorluguDegistir}
+          >
+            <Text style={styles.btnSecondaryText}>ZORLUK DEĞİŞTİR</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={() => router.replace("/(tabs)")}
@@ -196,41 +339,140 @@ export default function PatternSequenceScreen() {
         </View>
         <View style={styles.headerCenter}>
           <Text style={styles.gameTitle}>SIRAYI TAKİP ET</Text>
+          <Text style={styles.gameSub}>{ayar!.etiket}</Text>
         </View>
         <View style={styles.headerRight} />
       </View>
 
       <View style={styles.statusBox}>
-        <Text style={styles.statusText}>
-          {isShowingSequence ? "İzle..." : "Şimdi sen tekrarla!"}
+        <Text
+          style={[
+            styles.statusText,
+            hazirlaniyor && styles.statusHazir,
+            !isShowingSequence && styles.statusSira,
+          ]}
+        >
+          {hazirlaniyor
+            ? "Hazır ol..."
+            : isShowingSequence
+              ? "İzle..."
+              : "Şimdi sen tekrarla!"}
         </Text>
       </View>
 
-      <View style={styles.grid}>
-        {COLORS.map((c) => (
-          <TouchableOpacity
+      <View
+        style={[
+          styles.grid,
+          {
+            width: ayar!.sutun * boyut + (ayar!.sutun - 1) * BOSLUK,
+            gap: BOSLUK,
+          },
+        ]}
+      >
+        {aktifRenkler.map((c) => (
+          <ColorButton
             key={c.id}
-            style={[
-              styles.colorBtn,
-              { backgroundColor: activeIndex === c.id ? c.active : c.base },
-            ]}
+            color={c}
+            boyut={boyut}
+            isActive={activeIndex === c.id}
             onPress={() => handlePress(c.id)}
-            activeOpacity={0.8}
             disabled={isShowingSequence}
           />
         ))}
       </View>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>Geri Dön</Text>
+      <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
+        <Text style={styles.backText}>Zorluk Değiştir</Text>
       </TouchableOpacity>
     </SafeAreaView>
+  );
+}
+
+function ColorButton({
+  color,
+  boyut,
+  isActive,
+  onPress,
+  disabled,
+}: {
+  color: { id: number; base: string; active: string };
+  boyut: number;
+  isActive: boolean;
+  onPress: () => void;
+  disabled: boolean;
+}) {
+  const scale = useSharedValue(1);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animStyle}>
+      <TouchableOpacity
+        style={[
+          styles.colorBtn,
+          {
+            width: boyut,
+            height: boyut,
+            borderRadius: boyut / 2,
+            backgroundColor: isActive ? color.active : color.base,
+            borderColor: isActive ? "#FFFFFF" : color.active,
+          },
+        ]}
+        onPressIn={() => {
+          scale.value = withSpring(0.92, { damping: 15, stiffness: 400 });
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, { damping: 12, stiffness: 300 });
+        }}
+        onPress={onPress}
+        activeOpacity={0.85}
+        disabled={disabled}
+      />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0B1020", padding: 16 },
 
+  // Zorluk seçimi
+  secimBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+  secimEmoji: { fontSize: 56, marginBottom: 12 },
+  secimBaslik: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#FBBF24",
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  secimAlt: { fontSize: 14, color: "#9CA3AF", marginBottom: 28 },
+  zorlukBtn: {
+    width: "100%",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: 2,
+  },
+  zorluk_kolay: { backgroundColor: "#064E3B", borderColor: "#22C55E" },
+  zorluk_orta: { backgroundColor: "#172554", borderColor: "#3B82F6" },
+  zorluk_zor: { backgroundColor: "#450A0A", borderColor: "#EF4444" },
+  zorlukBtnText: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: 2,
+  },
+  zorlukBtnSub: { fontSize: 12, color: "#D1D5DB", marginTop: 4 },
+
+  // Header
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -253,36 +495,39 @@ const styles = StyleSheet.create({
     color: "#FBBF24",
     letterSpacing: 1,
   },
+  gameSub: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#9CA3AF",
+    letterSpacing: 1.5,
+    marginTop: 2,
+  },
 
-  statusBox: { alignItems: "center", marginBottom: 20 },
+  statusBox: { alignItems: "center", marginBottom: 20, height: 24 },
   statusText: { fontSize: 16, fontWeight: "700", color: "#9CA3AF" },
+  statusHazir: { color: "#FBBF24" },
+  statusSira: { color: "#22C55E" },
 
   grid: {
-    flex: 1,
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    alignContent: "center",
+    justifyContent: "center",
+    alignSelf: "center",
   },
-  colorBtn: {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
-    borderRadius: 20,
-    marginBottom: GRID_GAP,
-    borderWidth: 2,
-    borderColor: "#1F2B47",
-  },
+  colorBtn: { borderWidth: 3 },
+
   backButton: {
+    marginTop: "auto",
     backgroundColor: "#151B2E",
     padding: 14,
     borderRadius: 14,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#1F2B47",
-    marginTop: 16,
   },
   backText: { color: "#9CA3AF", fontWeight: "700" },
 
+  // Oyun sonu
   resultBox: {
     flex: 1,
     justifyContent: "center",
@@ -344,6 +589,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 1,
     borderColor: "#1F2B47",
+    marginBottom: 10,
   },
   btnSecondaryText: { color: "#9CA3AF", fontWeight: "700" },
 });

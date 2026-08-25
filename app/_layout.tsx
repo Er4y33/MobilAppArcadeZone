@@ -1,8 +1,10 @@
 import { Stack } from "expo-router";
 import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "../context/AuthContext";
 import { HapticsProvider } from "../context/HapticsContext";
 import { ScoreProvider } from "../context/ScoreContext";
+import { SoundProvider } from "../context/SoundContext";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 function RootNavigator() {
   const { colors } = useTheme();
@@ -53,14 +55,18 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <HapticsProvider>
-        <AuthProvider>
-          <ScoreProvider>
-            <RootNavigator />
-          </ScoreProvider>
-        </AuthProvider>
-      </HapticsProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <HapticsProvider>
+          <AuthProvider>
+            <SoundProvider>
+              <ScoreProvider>
+                <RootNavigator />
+              </ScoreProvider>
+            </SoundProvider>
+          </AuthProvider>
+        </HapticsProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

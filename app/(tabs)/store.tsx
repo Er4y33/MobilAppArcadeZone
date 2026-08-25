@@ -11,10 +11,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
+import { useSound } from "../../context/SoundContext";
 import { useTheme } from "../../context/ThemeContext";
 import { hapticSuccess } from "../../lib/haptics";
 import { supabase } from "../../lib/supabase";
-
 type StoreItem = {
   id: string;
   name: string;
@@ -35,7 +35,7 @@ const CATEGORIES: { key: Category; label: string }[] = [
 export default function StoreScreen() {
   const { user, profile, refreshProfile } = useAuth();
   const { colors } = useTheme();
-
+  const { cal } = useSound();
   const [items, setItems] = useState<StoreItem[]>([]);
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
   const [category, setCategory] = useState<Category>("frame");
@@ -99,6 +99,7 @@ export default function StoreScreen() {
             }
             // Satın alma başarılı
             hapticSuccess();
+            cal("win");
             await refreshProfile();
             await fetchData();
             Alert.alert("Tebrikler!", `"${item.name}" artık senin.`);
@@ -123,6 +124,7 @@ export default function StoreScreen() {
       Alert.alert("İşlem başarısız", error.message);
       return;
     }
+    cal("click");
     await refreshProfile();
   };
 
@@ -133,8 +135,6 @@ export default function StoreScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <Text style={[styles.title, { color: colors.accent }]}>MAĞAZA</Text>
-
       {/* Bakiye */}
       <View style={[styles.balanceCard, { backgroundColor: colors.surface }]}>
         <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
@@ -319,14 +319,6 @@ export default function StoreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  title: {
-    fontSize: 26,
-    fontWeight: "900",
-    textAlign: "center",
-    letterSpacing: 2,
-    marginTop: 12,
-    marginBottom: 14,
-  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   balanceCard: {

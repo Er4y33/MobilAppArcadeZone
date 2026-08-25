@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useScores } from "../../../context/ScoreContext";
-import { useTheme } from "../../../context/ThemeContext";
+import { Difficulty, useScores } from "../../../context/ScoreContext";
+import { useSound } from "../../../context/SoundContext";
 import {
   LEVELS,
   MAX_TIME,
@@ -21,8 +21,9 @@ import {
   hapticError,
   hapticLight,
   hapticSuccess,
-  hapticWarning
+  hapticWarning,
 } from "../../../lib/haptics";
+
 // Türkçe büyük/küçük harf yardımcıları
 const toLowerTR = (s: string) =>
   s.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase();
@@ -33,12 +34,22 @@ const toUpperTR = (ch: string) => {
   return ch.toUpperCase();
 };
 
-type GamePhase = "playing" | "levelUp" | "gameOver";
+type GamePhase = "playing" | "gameOver";
+type Mod = "yazmali" | "dokunmali";
+
+// Mod → veritabanı zorluğu eşlemesi
+const MOD_ZORLUK: Record<Mod, Difficulty> = {
+  dokunmali: "kolay",
+  yazmali: "orta",
+};
+
+const CEZA_SANIYE = 2;
+const KILIT_SURESI = 500;
 
 export default function SonSaniyeScreen() {
   const { addScore } = useScores();
-  const { colors } = useTheme();
-
+  const { cal } = useSound();
+  const [mod, setMod] = useState<Mod | null>(null);
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
   const [score, setScore] = useState(0);
@@ -52,15 +63,32 @@ export default function SonSaniyeScreen() {
   const [isVictory, setIsVictory] = useState(false);
   const [earnedXP, setEarnedXP] = useState(0);
 
+  // Dokunmalı mod durumu
+  const [kullanilan, setKullanilan] = useState<number[]>([]); // yerleşen harflerin scrambled index'leri
+  const [dogruIndex, setDogruIndex] = useState<number | null>(null); // yeşil yanan
+  const [yanlisIndex, setYanlisIndex] = useState<number | null>(null); // kırmızı yanan
+  const [kilitli, setKilitli] = useState(false);
+  const kilitliRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const submittedRef = useRef(false);
-  const scoreRef = useRef(0); // Skor ref'i — gameOver anında güncel değeri yakala
+  const scoreRef = useRef(0);
+  const modRef = useRef<Mod>("yazmali"); // async endGame için
+  const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Son 3 saniye uyarısı
+  useEffect(() => {
+    if (phase !== "playing" || !mod) return;
+    if (timeLeft <= 3 && timeLeft > 0) cal("tick");
+  }, [timeLeft, phase, mod, cal]);
 
   // ─── OYUN BAŞLAT ────────────────────────────────────────────
-  const startGame = () => {
+  const startGame = (m: Mod) => {
     if (timerRef.current) clearInterval(timerRef.current);
     submittedRef.current = false;
     scoreRef.current = 0;
+    modRef.current = m;
+
+    setMod(m);
     setPhase("playing");
     setTimeLeft(MAX_TIME);
     setScore(0);
@@ -83,13 +111,6 @@ export default function SonSaniyeScreen() {
     }, 1000);
   };
 
-  useEffect(() => {
-    startGame();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
-
   // ─── KELİME YÜKLE ───────────────────────────────────────────
   const loadWord = (lvlIdx: number, used: string[]) => {
     const pool = LEVELS[lvlIdx].pool;
@@ -99,15 +120,20 @@ export default function SonSaniyeScreen() {
     setTargetWord(next);
     setScrambled(shuffleLetters(next));
     setInput("");
+    setKullanilan([]);
+    setDogruIndex(null);
+    setYanlisIndex(null);
+    kilitliRef.current = false;
+    setKilitli(false);
   };
 
   // ─── OYUNU BİTİR ────────────────────────────────────────────
   const endGame = (victory: boolean) => {
     if (timerRef.current) clearInterval(timerRef.current);
 
-    // Zafer → başarı, süre bitti → uyarı titreşimi
     if (victory) {
       hapticSuccess();
+      cal("win");
     } else {
       hapticWarning();
     }
@@ -118,9 +144,13 @@ export default function SonSaniyeScreen() {
     if (!submittedRef.current) {
       submittedRef.current = true;
       const finalScore = scoreRef.current;
-      addScore({ game: "sonsaniye", score: finalScore, label: "points" });
+      addScore({
+        game: "sonsaniye",
+        score: finalScore,
+        label: "points",
+        difficulty: MOD_ZORLUK[modRef.current],
+      });
 
-      // XP tahmini göster (gerçek XP Supabase'den geliyor ama feedback için)
       const xp =
         finalScore >= 375
           ? 100
@@ -137,54 +167,107 @@ export default function SonSaniyeScreen() {
     }
   };
 
-  // ─── CEVAP GÖNDER ───────────────────────────────────────────
+  // ─── KELİME ÇÖZÜLDÜ (ortak akış) ────────────────────────────
+  const kelimeCozuldu = () => {
+    hapticSuccess();
+    cal("correct");
+    const pts = LEVELS[levelIndex].points;
+    const newScore = scoreRef.current + pts;
+    scoreRef.current = newScore;
+    setScore(newScore);
+    setTimeLeft((t) => Math.min(t + 5, 99));
+
+    const newSolved = levelSolved + 1;
+    const newUsed = [...usedInLevel, targetWord];
+
+    if (newSolved >= WORDS_PER_LEVEL) {
+      if (levelIndex >= LEVELS.length - 1) {
+        setFeedback(`🎉 +${pts} Puan! Tüm seviyeler tamam!`);
+        setTimeout(() => endGame(true), 800);
+      } else {
+        const nextIdx = levelIndex + 1;
+        setLevelIndex(nextIdx);
+        setLevelSolved(0);
+        setUsedInLevel([]);
+        setFeedback(`✨ SEVİYE ${nextIdx + 1}! +${pts} Puan`);
+        loadWord(nextIdx, []);
+      }
+    } else {
+      setLevelSolved(newSolved);
+      setUsedInLevel(newUsed);
+      setFeedback(`DOĞRU! +${pts} Puan, +5 Saniye`);
+      loadWord(levelIndex, newUsed);
+    }
+  };
+
+  // ─── YAZMALI MOD: CEVAP GÖNDER ──────────────────────────────
   const submitWord = () => {
     if (!input.trim() || phase !== "playing") return;
     const guess = toLowerTR(input.trim());
     const target = toLowerTR(targetWord);
 
     if (guess === target) {
-      // Doğru kelime → başarı titreşimi
-      hapticSuccess();
-
-      const pts = LEVELS[levelIndex].points;
-      const newScore = scoreRef.current + pts;
-      scoreRef.current = newScore;
-      setScore(newScore);
-      setTimeLeft((t) => Math.min(t + 5, 99));
-
-      const newSolved = levelSolved + 1;
-      const newUsed = [...usedInLevel, targetWord];
-
-      if (newSolved >= WORDS_PER_LEVEL) {
-        if (levelIndex >= LEVELS.length - 1) {
-          setFeedback(`🎉 +${pts} Puan! Tüm seviyeler tamam!`);
-          setTimeout(() => endGame(true), 800);
-        } else {
-          const nextIdx = levelIndex + 1;
-          setLevelIndex(nextIdx);
-          setLevelSolved(0);
-          setUsedInLevel([]);
-          setFeedback(`✨ SEVİYE ${nextIdx + 1}! +${pts} Puan`);
-          loadWord(nextIdx, []);
-        }
-      } else {
-        setLevelSolved(newSolved);
-        setUsedInLevel(newUsed);
-        setFeedback(`DOĞRU! +${pts} Puan, +5 Saniye`);
-        loadWord(levelIndex, newUsed);
-      }
+      kelimeCozuldu();
     } else {
-      // Yanlış kelime → hata titreşimi
       hapticError();
+      cal("wrong");
       setFeedback("YANLIŞ — Tekrar Dene");
       setInput("");
+    }
+  };
+
+  // ─── DOKUNMALI MOD: HARFE BAS ───────────────────────────────
+  const harfeBas = (index: number) => {
+    if (phase !== "playing") return;
+    if (kilitliRef.current) return;
+    if (kullanilan.includes(index)) return;
+
+    const hedef = toLowerTR(targetWord);
+    const siradaki = hedef[kullanilan.length];
+    const basilan = toLowerTR(scrambled[index]);
+
+    if (flashRef.current) clearTimeout(flashRef.current);
+
+    if (basilan === siradaki) {
+      // Doğru harf → yeşil yan, boşluğa yerleş
+      hapticLight();
+      cal("click");
+      setDogruIndex(index);
+      setYanlisIndex(null);
+
+      const yeni = [...kullanilan, index];
+      setKullanilan(yeni);
+
+      flashRef.current = setTimeout(() => setDogruIndex(null), 250);
+
+      if (yeni.length === hedef.length) {
+        setTimeout(kelimeCozuldu, 300);
+      }
+    } else {
+      // Yanlış harf → kırmızı titret, süre cezası, kısa kilit
+      hapticError();
+      cal("wrong");
+      setYanlisIndex(index);
+      setDogruIndex(null);
+
+      kilitliRef.current = true;
+      setKilitli(true);
+
+      setTimeLeft((t) => Math.max(1, t - CEZA_SANIYE));
+      setFeedback(`YANLIŞ — ${CEZA_SANIYE} saniye`);
+
+      flashRef.current = setTimeout(() => {
+        setYanlisIndex(null);
+        kilitliRef.current = false;
+        setKilitli(false);
+      }, KILIT_SURESI);
     }
   };
 
   // ─── PAS GEÇ ────────────────────────────────────────────────
   const passWord = () => {
     hapticLight();
+    cal("click");
     const newScore = Math.max(0, scoreRef.current - 5);
     scoreRef.current = newScore;
     setScore(newScore);
@@ -194,12 +277,70 @@ export default function SonSaniyeScreen() {
     loadWord(levelIndex, newUsed);
   };
 
+  const modDegistir = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (flashRef.current) clearTimeout(flashRef.current);
+    setMod(null);
+    setPhase("playing");
+  };
+
+  // ─── MOD SEÇİM EKRANI ───────────────────────────────────────
+  if (!mod) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
+        <View style={styles.secimBox}>
+          <Text style={styles.secimEmoji}>⏱</Text>
+          <Text style={styles.secimBaslik}>SON SANİYE</Text>
+          <Text style={styles.secimAlt}>Mod seç</Text>
+
+          <Animated.View
+            style={{ width: "100%" }}
+            entering={FadeInDown.duration(350)}
+          >
+            <TouchableOpacity
+              style={[styles.modBtn, styles.modDokunmali]}
+              onPress={() => startGame("dokunmali")}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.modBtnText}>DOKUNMALI</Text>
+              <Text style={styles.modBtnSub}>
+                Harflere sırayla bas · Klavye yok
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          <Animated.View
+            style={{ width: "100%" }}
+            entering={FadeInDown.delay(80).duration(350)}
+          >
+            <TouchableOpacity
+              style={[styles.modBtn, styles.modYazmali]}
+              onPress={() => startGame("yazmali")}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.modBtnText}>YAZMALI</Text>
+              <Text style={styles.modBtnSub}>
+                Kelimeyi klavyeyle yaz · Klasik
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backText}>Geri Dön</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   // ─── OYUN SONU EKRANI ───────────────────────────────────────
   if (phase === "gameOver") {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
         <View style={styles.resultBox}>
-          {/* İkon */}
           <Animated.Text
             style={styles.resultEmoji}
             entering={ZoomIn.duration(400)}
@@ -207,15 +348,13 @@ export default function SonSaniyeScreen() {
             {isVictory ? "🏆" : "⏱"}
           </Animated.Text>
 
-          {/* Başlık */}
           <Text style={styles.resultTitle}>
             {isVictory ? "MÜKEMMEL!" : "SÜRE BİTTİ!"}
           </Text>
           <Text style={styles.resultSub}>
-            {isVictory ? "Tüm seviyeleri tamamladın!" : "Son Saniye Oyunu"}
+            {mod === "dokunmali" ? "Dokunmalı Mod" : "Yazmalı Mod"}
           </Text>
 
-          {/* Skor kutusu */}
           <Animated.View
             style={styles.scoreBox}
             entering={FadeInDown.delay(150).duration(400)}
@@ -224,7 +363,6 @@ export default function SonSaniyeScreen() {
             <Text style={styles.scoreBoxValue}>{score}</Text>
           </Animated.View>
 
-          {/* XP kazanıldı */}
           <Animated.View
             style={styles.xpBox}
             entering={FadeInDown.delay(300).duration(400)}
@@ -232,14 +370,19 @@ export default function SonSaniyeScreen() {
             <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
           </Animated.View>
 
-          {/* Seviye bilgisi */}
           <Text style={styles.levelReached}>
             Ulaşılan Seviye: {levelIndex + 1} / {LEVELS.length}
           </Text>
 
-          {/* Butonlar */}
-          <TouchableOpacity style={styles.btnPrimary} onPress={startGame}>
+          <TouchableOpacity
+            style={styles.btnPrimary}
+            onPress={() => startGame(mod)}
+          >
             <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.btnSecondary} onPress={modDegistir}>
+            <Text style={styles.btnSecondaryText}>MOD DEĞİŞTİR</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -253,6 +396,9 @@ export default function SonSaniyeScreen() {
     );
   }
 
+  const dokunmaliMod = mod === "dokunmali";
+  const hedefUzunluk = targetWord.length;
+
   // ─── OYUN EKRANI ────────────────────────────────────────────
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
@@ -260,7 +406,9 @@ export default function SonSaniyeScreen() {
       <View style={styles.header}>
         <View style={styles.brand}>
           <View style={styles.dot} />
-          <Text style={styles.brandText}>SON SANİYE</Text>
+          <Text style={styles.brandText}>
+            SON SANİYE · {dokunmaliMod ? "DOKUNMALI" : "YAZMALI"}
+          </Text>
         </View>
         <View style={styles.scoreWrap}>
           <Text style={styles.scoreLabel}>SKOR</Text>
@@ -300,35 +448,87 @@ export default function SonSaniyeScreen() {
         </View>
       </View>
 
-      {/* Harfler */}
+      {/* Karışık harfler */}
       <View style={styles.scramble}>
-        {scrambled.map((ch, i) => (
-          <View key={i} style={styles.letterBox}>
-            <Text style={styles.letterText}>{toUpperTR(ch)}</Text>
-          </View>
-        ))}
+        {scrambled.map((ch, i) => {
+          const yerlesti = dokunmaliMod && kullanilan.includes(i);
+          const yesil = dogruIndex === i;
+          const kirmizi = yanlisIndex === i;
+
+          return (
+            <TouchableOpacity
+              key={i}
+              style={[
+                styles.letterBox,
+                yesil && styles.letterCorrect,
+                kirmizi && styles.letterWrong,
+                yerlesti && styles.letterUsed,
+              ]}
+              onPress={() => dokunmaliMod && harfeBas(i)}
+              disabled={!dokunmaliMod || yerlesti}
+              activeOpacity={dokunmaliMod ? 0.7 : 1}
+            >
+              <Text
+                style={[
+                  styles.letterText,
+                  yesil && styles.letterTextCorrect,
+                  yerlesti && styles.letterTextUsed,
+                ]}
+              >
+                {toUpperTR(ch)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Input */}
-      <TextInput
-        style={styles.input}
-        value={input}
-        onChangeText={setInput}
-        placeholder="Kelimeyi yaz..."
-        placeholderTextColor="#7a7a85"
-        autoCapitalize="none"
-        autoCorrect={false}
-        onSubmitEditing={submitWord}
-      />
+      {dokunmaliMod ? (
+        /* Boşluklar — dolan harfler buraya yerleşir */
+        <View style={styles.slotRow}>
+          {Array.from({ length: hedefUzunluk }).map((_, i) => {
+            const dolu = i < kullanilan.length;
+            const harf = dolu ? scrambled[kullanilan[i]] : "";
+            const siradaki = i === kullanilan.length;
+
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.slot,
+                  dolu && styles.slotDolu,
+                  siradaki && styles.slotSiradaki,
+                ]}
+              >
+                <Text style={styles.slotText}>
+                  {dolu ? toUpperTR(harf) : ""}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <TextInput
+          style={styles.input}
+          value={input}
+          onChangeText={setInput}
+          placeholder="Kelimeyi yaz..."
+          placeholderTextColor="#7a7a85"
+          autoCapitalize="none"
+          autoCorrect={false}
+          onSubmitEditing={submitWord}
+        />
+      )}
 
       {/* Butonlar */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.btnPass} onPress={passWord}>
           <Text style={styles.btnPassText}>PAS (-5)</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.btnSubmit} onPress={submitWord}>
-          <Text style={styles.btnSubmitText}>ONAYLA</Text>
-        </TouchableOpacity>
+        {!dokunmaliMod && (
+          <TouchableOpacity style={styles.btnSubmit} onPress={submitWord}>
+            <Text style={styles.btnSubmitText}>ONAYLA</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Feedback */}
@@ -344,8 +544,8 @@ export default function SonSaniyeScreen() {
       </Text>
 
       {/* Geri */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>Geri Dön</Text>
+      <TouchableOpacity style={styles.backButton} onPress={modDegistir}>
+        <Text style={styles.backText}>Mod Değiştir</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -353,6 +553,39 @@ export default function SonSaniyeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
+
+  // Mod seçimi
+  secimBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  secimEmoji: { fontSize: 56, marginBottom: 12 },
+  secimBaslik: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#c8ff3e",
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  secimAlt: { fontSize: 14, color: "#7a7a85", marginBottom: 28 },
+  modBtn: {
+    width: "100%",
+    paddingVertical: 20,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: 2,
+  },
+  modDokunmali: { backgroundColor: "#1a2a0a", borderColor: "#c8ff3e" },
+  modYazmali: { backgroundColor: "#111114", borderColor: "#26262d" },
+  modBtnText: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#e7e7ea",
+    letterSpacing: 2,
+  },
+  modBtnSub: { fontSize: 12, color: "#7a7a85", marginTop: 6 },
 
   // Header
   header: {
@@ -364,7 +597,7 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#c8ff3e" },
   brandText: {
     fontWeight: "800",
-    fontSize: 13,
+    fontSize: 11,
     color: "#7a7a85",
     letterSpacing: 0.5,
   },
@@ -422,7 +655,7 @@ const styles = StyleSheet.create({
   ldotFilled: { backgroundColor: "#c8ff3e", borderColor: "#c8ff3e" },
   ldotCurrent: { borderColor: "#c8ff3e" },
 
-  // Scramble
+  // Karışık harfler
   scramble: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -441,7 +674,39 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  letterCorrect: { backgroundColor: "#1a2a0a", borderColor: "#c8ff3e" },
+  letterWrong: { backgroundColor: "#2a0a0f", borderColor: "#ff3b5c" },
+  letterUsed: { backgroundColor: "#0a0a0c", borderColor: "#18181d" },
   letterText: { fontSize: 22, fontWeight: "700", color: "#e7e7ea" },
+  letterTextCorrect: { color: "#c8ff3e" },
+  letterTextUsed: { color: "#26262d" },
+
+  // Boşluklar (dokunmalı mod)
+  slotRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 14,
+    minHeight: 56,
+  },
+  slot: {
+    width: 44,
+    height: 52,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#26262d",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  slotDolu: {
+    backgroundColor: "#1a2a0a",
+    borderColor: "#c8ff3e",
+    borderStyle: "solid",
+  },
+  slotSiradaki: { borderColor: "#7a7a85" },
+  slotText: { fontSize: 22, fontWeight: "800", color: "#c8ff3e" },
 
   // Input & Actions
   input: {
@@ -509,7 +774,7 @@ const styles = StyleSheet.create({
   },
   backText: { color: "#7a7a85", fontWeight: "700" },
 
-  // ─── OYUN SONU ───────────────────────────────────────────────
+  // Oyun sonu
   resultBox: {
     flex: 1,
     justifyContent: "center",
@@ -551,7 +816,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   xpText: { color: "#5cffa8", fontSize: 16, fontWeight: "800" },
-  levelReached: { color: "#7a7a85", fontSize: 13, marginBottom: 28 },
+  levelReached: { color: "#7a7a85", fontSize: 13, marginBottom: 20 },
   btnPrimary: {
     backgroundColor: "#c8ff3e",
     padding: 18,
@@ -574,6 +839,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 1,
     borderColor: "#26262d",
+    marginBottom: 10,
   },
   btnSecondaryText: { color: "#7a7a85", fontWeight: "700", fontSize: 14 },
 });

@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
-    createContext,
-    ReactNode,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from "react";
 
 export type ThemeMode = "dark" | "light";
@@ -16,6 +16,13 @@ export type ThemeColors = {
   surface: string; // Kart, container arka planı
   surfaceAlt: string; // İkincil yüzey (input, secondary card)
   border: string; // Sınır rengi
+
+  // Oyun çerçeve renkleri
+  gameReaction: string;
+  gameMemory: string;
+  gameWord: string;
+  gameMath: string;
+  gamePattern: string;
 
   // Metin
   text: string; // Ana metin (başlık, vurgu)
@@ -50,6 +57,12 @@ const darkTheme: ThemeColors = {
   surfaceAlt: "#1F2B47",
   border: "#1F2B47",
 
+  gameReaction: "#A855F7",
+  gameMemory: "#06B6D4",
+  gameWord: "#FBBF24",
+  gameMath: "#22C55E",
+  gamePattern: "#F97316",
+
   text: "#FFFFFF",
   textSecondary: "#E5E7EB",
   textMuted: "#9CA3AF",
@@ -77,6 +90,12 @@ const lightTheme: ThemeColors = {
   surface: "#FFFFFF",
   surfaceAlt: "#F9FAFB",
   border: "#E5E7EB",
+
+  gameReaction: "#7C3AED",
+  gameMemory: "#0891B2",
+  gameWord: "#F59E0B",
+  gameMath: "#16A34A",
+  gamePattern: "#EA580C",
 
   text: "#0F172A",
   textSecondary: "#1F2937",
