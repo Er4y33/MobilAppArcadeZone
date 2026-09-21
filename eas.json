@@ -9,10 +9,7 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": {
-        "buildType": "apk",
-        "applicationIdSuffix": ".preview"
-      }
+      "android": { "buildType": "apk" }
     },
     "production": {
       "autoIncrement": true

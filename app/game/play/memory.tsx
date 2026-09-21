@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   StyleSheet,
@@ -151,10 +151,18 @@ function kartBoyutu(sutun: number, satir: number): number {
   return Math.floor(Math.min(genislikten, yukseklikten, MAX_KART));
 }
 
+function karistir<T>(dizi: T[]): T[] {
+  const a = [...dizi];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function kartlariOlustur(ciftSayisi: number, tema: Tema): CardType[] {
   const secilen = TEMALAR[tema].ogeler.slice(0, ciftSayisi);
-  const ikili = [...secilen, ...secilen];
-  const karisik = [...ikili].sort(() => Math.random() - 0.5);
+  const karisik = karistir([...secilen, ...secilen]);
   return karisik.map((value, index) => ({
     id: index,
     value,
@@ -173,12 +181,22 @@ export default function MemoryMatchScreen() {
   const [previewing, setPreviewing] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [earnedXP, setEarnedXP] = useState(0);
+  const [tur, setTur] = useState(0); // her yeni oyunda artar, effect'i zorla yeniler
+  const eslesmemeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addScore } = useScores();
   const { cal } = useSound();
   const ayar = zorluk ? AYARLAR[zorluk] : null;
 
+  const zamanlayicilariTemizle = () => {
+    if (eslesmemeTimer.current) {
+      clearTimeout(eslesmemeTimer.current);
+      eslesmemeTimer.current = null;
+    }
+  };
+
   const oyunBaslat = useCallback(
     (z: Difficulty) => {
+      zamanlayicilariTemizle();
       setZorluk(z);
       setCards(kartlariOlustur(AYARLAR[z].ciftSayisi, tema));
       setSelected([]);
@@ -187,6 +205,7 @@ export default function MemoryMatchScreen() {
       setEarnedXP(0);
       setCountdown(3);
       setPreviewing(true);
+      setTur((t) => t + 1);
     },
     [tema],
   );
@@ -195,24 +214,27 @@ export default function MemoryMatchScreen() {
     if (zorluk) oyunBaslat(zorluk);
   };
 
-  // Önizleme geri sayımı
+  const zorlukDegistir = () => {
+    zamanlayicilariTemizle();
+    setPreviewing(false);
+    setSelected([]);
+    setCards([]);
+    setZorluk(null);
+  };
+
+  // Önizleme geri sayımı — her saniye tek adım, tur değişince sıfırdan başlar
   useEffect(() => {
     if (!previewing) return;
 
-    const sayac = setInterval(() => {
-      setCountdown((n) => Math.max(n - 1, 0));
-    }, 1000);
-
-    const bitir = setTimeout(() => {
+    if (countdown === 0) {
       setCards((prev) => prev.map((c) => ({ ...c, flipped: false })));
       setPreviewing(false);
-    }, 3000);
+      return;
+    }
 
-    return () => {
-      clearInterval(sayac);
-      clearTimeout(bitir);
-    };
-  }, [previewing]);
+    const t = setTimeout(() => setCountdown((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [previewing, countdown, tur]);
 
   // Seçilen iki kartı karşılaştır
   useEffect(() => {
@@ -419,7 +441,7 @@ export default function MemoryMatchScreen() {
 
           <TouchableOpacity
             style={styles.btnSecondary}
-            onPress={() => setZorluk(null)}
+            onPress={zorlukDegistir}
           >
             <Text style={styles.btnSecondaryText}>ZORLUK DEĞİŞTİR</Text>
           </TouchableOpacity>
@@ -466,7 +488,7 @@ export default function MemoryMatchScreen() {
 
       {previewing && (
         <Text style={styles.previewText}>
-          {previewing ? `Kartları ezberle! ${countdown}` : " "}
+          {previewing && countdown > 0 ? `Kartları ezberle! ${countdown}` : " "}
         </Text>
       )}
 
