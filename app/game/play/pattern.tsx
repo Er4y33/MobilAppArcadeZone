@@ -15,9 +15,12 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import GeriSayim from "../../../components/GeriSayim";
 import { Difficulty, useScores } from "../../../context/ScoreContext";
 import { useSound } from "../../../context/SoundContext";
 import { hapticError, hapticLight, hapticSuccess } from "../../../lib/haptics";
+import { useGeriSayim } from "../../../lib/useGeriSayim";
+
 const { width: EKRAN_G, height: EKRAN_Y } = Dimensions.get("window");
 const BOSLUK = 14;
 const MAX_BUTON = 150;
@@ -72,7 +75,7 @@ const AYARLAR: Record<Difficulty, ZorlukAyari> = {
 };
 
 const ARA_SURE = 250;
-const BASLANGIC_BEKLEME = 1000; // ilk renk hemen yanmasın
+const BASLANGIC_BEKLEME = 500; // 3-2-1'den sonra ilk renk hemen yanmasın
 
 function butonBoyutu(sutun: number, satir: number): number {
   const genislikten = (EKRAN_G - 32 - BOSLUK * (sutun - 1)) / sutun;
@@ -86,7 +89,6 @@ export default function PatternSequenceScreen() {
   const [level, setLevel] = useState(1);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [isShowingSequence, setIsShowingSequence] = useState(true);
-  const [hazirlaniyor, setHazirlaniyor] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [earnedXP, setEarnedXP] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
@@ -98,50 +100,55 @@ export default function PatternSequenceScreen() {
   const { cal } = useSound();
   const ayar = zorluk ? AYARLAR[zorluk] : null;
 
-  const clearAllTimeouts = () => {
+  const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach(clearTimeout);
     timeoutsRef.current = [];
-  };
-
-  useEffect(() => {
-    return () => clearAllTimeouts();
   }, []);
+
+  useEffect(() => clearAllTimeouts, [clearAllTimeouts]);
 
   const rastgeleRenk = useCallback((renkSayisi: number) => {
     return Math.floor(Math.random() * renkSayisi);
   }, []);
 
-  const playSequence = useCallback((a: ZorlukAyari, ilkTur: boolean) => {
-    setIsShowingSequence(true);
-    playerStepRef.current = 0;
-    const seq = sequenceRef.current;
-    const basla = ilkTur ? BASLANGIC_BEKLEME : 0;
+  const playSequence = useCallback(
+    (a: ZorlukAyari, ilkTur: boolean) => {
+      setIsShowingSequence(true);
+      playerStepRef.current = 0;
+      const seq = sequenceRef.current;
+      const basla = ilkTur ? BASLANGIC_BEKLEME : 0;
 
-    if (ilkTur) {
-      setHazirlaniyor(true);
+      seq.forEach((renkIndex, i) => {
+        const showAt = basla + i * (a.gosterSure + ARA_SURE);
+        const hideAt = showAt + a.gosterSure;
+
+        timeoutsRef.current.push(
+          setTimeout(() => {
+            setActiveIndex(renkIndex);
+            cal("tick");
+          }, showAt),
+        );
+        timeoutsRef.current.push(
+          setTimeout(() => setActiveIndex(null), hideAt),
+        );
+      });
+
+      const toplam = basla + seq.length * (a.gosterSure + ARA_SURE);
       timeoutsRef.current.push(
-        setTimeout(() => setHazirlaniyor(false), BASLANGIC_BEKLEME),
+        setTimeout(() => setIsShowingSequence(false), toplam),
       );
-    }
+    },
+    [cal],
+  );
 
-    seq.forEach((renkIndex, i) => {
-      const showAt = basla + i * (a.gosterSure + ARA_SURE);
-      const hideAt = showAt + a.gosterSure;
-
-      timeoutsRef.current.push(
-        setTimeout(() => {
-          setActiveIndex(renkIndex);
-          cal("tick");
-        }, showAt),
-      );
-      timeoutsRef.current.push(setTimeout(() => setActiveIndex(null), hideAt));
-    });
-
-    const toplam = basla + seq.length * (a.gosterSure + ARA_SURE);
-    timeoutsRef.current.push(
-      setTimeout(() => setIsShowingSequence(false), toplam),
-    );
-  }, []);
+  // 3-2-1 bitince dizi oynatılmaya başlar
+  const geriSayim = useGeriSayim(
+    () => {
+      if (ayar) playSequence(ayar, true);
+    },
+    () => cal("tick"),
+  );
+  const baslatGeriSayim = geriSayim.baslat;
 
   const oyunBaslat = useCallback(
     (z: Difficulty) => {
@@ -152,12 +159,13 @@ export default function PatternSequenceScreen() {
       playerStepRef.current = 0;
       setLevel(1);
       setActiveIndex(null);
+      setIsShowingSequence(true);
       setGameOver(false);
       setEarnedXP(0);
       setFinalScore(0);
-      playSequence(a, true);
+      baslatGeriSayim();
     },
-    [playSequence, rastgeleRenk],
+    [clearAllTimeouts, rastgeleRenk, baslatGeriSayim],
   );
 
   const yenidenOyna = () => {
@@ -165,6 +173,7 @@ export default function PatternSequenceScreen() {
   };
 
   const zorluguDegistir = () => {
+    geriSayim.iptal();
     clearAllTimeouts();
     setZorluk(null);
     setGameOver(false);
@@ -198,6 +207,8 @@ export default function PatternSequenceScreen() {
     if (playerStepRef.current === sequenceRef.current.length) {
       hapticSuccess();
       cal("correct");
+      // Yeni dizi başlayana kadar (700 ms) dokunuşları hemen kilitle
+      setIsShowingSequence(true);
       sequenceRef.current = [
         ...sequenceRef.current,
         rastgeleRenk(ayar.renkSayisi),
@@ -329,6 +340,22 @@ export default function PatternSequenceScreen() {
     );
   }
 
+  // ── GERİ SAYIM EKRANI ─────────────────────────────────────────
+  if (geriSayim.aktif) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <GeriSayim
+          kalan={geriSayim.kalan!}
+          renk="#FBBF24"
+          baslik={`SIRAYI TAKİP ET · ${ayar!.etiket}`}
+        />
+        <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
+          <Text style={styles.backText}>Zorluk Değiştir</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   // ── OYUN EKRANI ────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
@@ -346,17 +373,9 @@ export default function PatternSequenceScreen() {
 
       <View style={styles.statusBox}>
         <Text
-          style={[
-            styles.statusText,
-            hazirlaniyor && styles.statusHazir,
-            !isShowingSequence && styles.statusSira,
-          ]}
+          style={[styles.statusText, !isShowingSequence && styles.statusSira]}
         >
-          {hazirlaniyor
-            ? "Hazır ol..."
-            : isShowingSequence
-              ? "İzle..."
-              : "Şimdi sen tekrarla!"}
+          {isShowingSequence ? "İzle..." : "Şimdi sen tekrarla!"}
         </Text>
       </View>
 
@@ -505,7 +524,6 @@ const styles = StyleSheet.create({
 
   statusBox: { alignItems: "center", marginBottom: 20, height: 24 },
   statusText: { fontSize: 16, fontWeight: "700", color: "#9CA3AF" },
-  statusHazir: { color: "#FBBF24" },
   statusSira: { color: "#22C55E" },
 
   grid: {

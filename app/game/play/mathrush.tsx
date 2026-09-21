@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import GeriSayim from "../../../components/GeriSayim";
 import { Difficulty, useScores } from "../../../context/ScoreContext";
 import { useSound } from "../../../context/SoundContext";
 import {
@@ -11,6 +12,8 @@ import {
   hapticSuccess,
   hapticWarning,
 } from "../../../lib/haptics";
+import { useGeriSayim } from "../../../lib/useGeriSayim";
+
 const TOPLAM_TUR = 10;
 
 type Question = {
@@ -34,6 +37,16 @@ const AYARLAR: Record<Difficulty, ZorlukAyari> = {
 
 const rnd = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
+
+// Fisher–Yates: şıkların yeri eşit olasılıklı
+function karistir<T>(dizi: T[]): T[] {
+  const a = [...dizi];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 // ── SORU ÜRETİMİ ────────────────────────────────────────────────
 function soruUret(zorluk: Difficulty, tur: number): Question {
@@ -142,7 +155,7 @@ function siklarUret(answer: number): number[] {
     ek++;
   }
 
-  return Array.from(secenekler).sort(() => Math.random() - 0.5);
+  return karistir(Array.from(secenekler));
 }
 
 export default function MathRushScreen() {
@@ -169,11 +182,36 @@ export default function MathRushScreen() {
   const { cal } = useSound();
   const ayar = zorluk ? AYARLAR[zorluk] : null;
 
+  // 3-2-1 bitince ilk soru gelir ve süre akmaya başlar
+  const geriSayim = useGeriSayim(
+    () => turBaslat(soruUret(zorlukRef.current, 1), zorlukRef.current),
+    () => cal("tick"),
+  );
+
+  const zamanlayicilariTemizle = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    intervalRef.current = null;
+    advanceTimeoutRef.current = null;
+  };
+
+  // Ekrandan çıkılırsa (geri tuşu vb.) oyun arkada devam edip skor kaydetmesin
+   
+  useEffect(() => zamanlayicilariTemizle, []);
+
   // Son 3 saniye uyarısı
   useEffect(() => {
-    if (gameOver || !zorluk || feedback !== "none") return;
+    if (gameOver || !zorluk || feedback !== "none" || geriSayim.aktif) return;
     if (timeLeft <= 3 && timeLeft > 0) cal("tick");
-  }, [timeLeft, gameOver, zorluk, feedback, cal]);
+  }, [timeLeft, gameOver, zorluk, feedback, geriSayim.aktif, cal]);
+
+  // Süre dolunca — state güncelleyicisinin DIŞINDA tetiklenir
+  useEffect(() => {
+    if (timeLeft !== 0 || feedback !== "none" || gameOver || !zorluk) return;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    sureDoldu();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft]);
 
   const turBaslat = (q: Question, z: Difficulty) => {
     setQuestion(q);
@@ -183,20 +221,12 @@ export default function MathRushScreen() {
 
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          sureDoldu();
-          return 0;
-        }
-        return t - 1;
-      });
+      setTimeLeft((t) => Math.max(t - 1, 0));
     }, 1000);
   };
 
   const oyunBaslat = (z: Difficulty) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    zamanlayicilariTemizle();
 
     zorlukRef.current = z;
     roundRef.current = 1;
@@ -209,7 +239,11 @@ export default function MathRushScreen() {
     setCorrectCount(0);
     setGameOver(false);
     setEarnedXP(0);
-    turBaslat(soruUret(z, 1), z);
+    setFeedback("none");
+    setQuestion({ metin: "", answer: 0 });
+    setOptions([]);
+    setTimeLeft(AYARLAR[z].sure);
+    geriSayim.baslat();
   };
 
   const sonrakiTur = () => {
@@ -267,8 +301,8 @@ export default function MathRushScreen() {
   };
 
   const zorluguDegistir = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    geriSayim.iptal();
+    zamanlayicilariTemizle();
     setZorluk(null);
     setGameOver(false);
   };
@@ -386,6 +420,22 @@ export default function MathRushScreen() {
             <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
           </TouchableOpacity>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── GERİ SAYIM EKRANI ─────────────────────────────────────────
+  if (geriSayim.aktif) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <GeriSayim
+          kalan={geriSayim.kalan!}
+          renk="#06B6D4"
+          baslik={`SAYI AVI · ${ayar!.etiket}`}
+        />
+        <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
+          <Text style={styles.backText}>Zorluk Değiştir</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }

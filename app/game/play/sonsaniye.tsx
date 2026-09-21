@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import GeriSayim from "../../../components/GeriSayim";
 import { Difficulty, useScores } from "../../../context/ScoreContext";
 import { useSound } from "../../../context/SoundContext";
 import {
@@ -23,6 +24,7 @@ import {
   hapticSuccess,
   hapticWarning,
 } from "../../../lib/haptics";
+import { useGeriSayim } from "../../../lib/useGeriSayim";
 
 // Türkçe büyük/küçük harf yardımcıları
 const toLowerTR = (s: string) =>
@@ -67,23 +69,62 @@ export default function SonSaniyeScreen() {
   const [kullanilan, setKullanilan] = useState<number[]>([]); // yerleşen harflerin scrambled index'leri
   const [dogruIndex, setDogruIndex] = useState<number | null>(null); // yeşil yanan
   const [yanlisIndex, setYanlisIndex] = useState<number | null>(null); // kırmızı yanan
-  const [kilitli, setKilitli] = useState(false);
+  const [, setKilitli] = useState(false);
   const kilitliRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const submittedRef = useRef(false);
   const scoreRef = useRef(0);
   const modRef = useRef<Mod>("yazmali"); // async endGame için
   const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bekleyenlerRef = useRef<ReturnType<typeof setTimeout>[]>([]); // diğer gecikmeli işler
+
+  // 3-2-1 bitince süre akmaya başlar
+  const geriSayim = useGeriSayim(
+    () => zamanlayiciBaslat(),
+    () => cal("tick"),
+  );
+
+  // Takip edilen gecikmeli iş: Mod Değiştir / çıkışta iptal edilebilir
+  const sonra = (fn: () => void, ms: number) => {
+    bekleyenlerRef.current.push(setTimeout(fn, ms));
+  };
+
+  const hepsiniTemizle = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (flashRef.current) clearTimeout(flashRef.current);
+    bekleyenlerRef.current.forEach(clearTimeout);
+    timerRef.current = null;
+    flashRef.current = null;
+    bekleyenlerRef.current = [];
+  };
+
+  // Ekrandan çıkılırsa oyun arkada devam edip skor kaydetmesin
+   
+  useEffect(() => hepsiniTemizle, []);
 
   // Son 3 saniye uyarısı
   useEffect(() => {
-    if (phase !== "playing" || !mod) return;
+    if (phase !== "playing" || !mod || geriSayim.aktif) return;
     if (timeLeft <= 3 && timeLeft > 0) cal("tick");
-  }, [timeLeft, phase, mod, cal]);
+  }, [timeLeft, phase, mod, geriSayim.aktif, cal]);
+
+  // Süre dolunca — state güncelleyicisinin DIŞINDA tetiklenir
+  useEffect(() => {
+    if (timeLeft !== 0 || phase !== "playing" || !mod) return;
+    endGame(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft]);
+
+  const zamanlayiciBaslat = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => Math.max(t - 1, 0));
+    }, 1000);
+  };
 
   // ─── OYUN BAŞLAT ────────────────────────────────────────────
   const startGame = (m: Mod) => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    hepsiniTemizle();
     submittedRef.current = false;
     scoreRef.current = 0;
     modRef.current = m;
@@ -98,17 +139,7 @@ export default function SonSaniyeScreen() {
     setFeedback("");
     setEarnedXP(0);
     loadWord(0, []);
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          clearInterval(timerRef.current!);
-          endGame(false);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
+    geriSayim.baslat();
   };
 
   // ─── KELİME YÜKLE ───────────────────────────────────────────
@@ -129,7 +160,7 @@ export default function SonSaniyeScreen() {
 
   // ─── OYUNU BİTİR ────────────────────────────────────────────
   const endGame = (victory: boolean) => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    hepsiniTemizle();
 
     if (victory) {
       hapticSuccess();
@@ -183,7 +214,8 @@ export default function SonSaniyeScreen() {
     if (newSolved >= WORDS_PER_LEVEL) {
       if (levelIndex >= LEVELS.length - 1) {
         setFeedback(`🎉 +${pts} Puan! Tüm seviyeler tamam!`);
-        setTimeout(() => endGame(true), 800);
+        if (timerRef.current) clearInterval(timerRef.current); // bitiş beklerken süre akmasın
+        sonra(() => endGame(true), 800);
       } else {
         const nextIdx = levelIndex + 1;
         setLevelIndex(nextIdx);
@@ -241,7 +273,9 @@ export default function SonSaniyeScreen() {
       flashRef.current = setTimeout(() => setDogruIndex(null), 250);
 
       if (yeni.length === hedef.length) {
-        setTimeout(kelimeCozuldu, 300);
+        // Son harften sonra kelime geçişi sırasında başka harfe basılmasın
+        kilitliRef.current = true;
+        sonra(kelimeCozuldu, 300);
       }
     } else {
       // Yanlış harf → kırmızı titret, süre cezası, kısa kilit
@@ -278,8 +312,8 @@ export default function SonSaniyeScreen() {
   };
 
   const modDegistir = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (flashRef.current) clearTimeout(flashRef.current);
+    geriSayim.iptal();
+    hepsiniTemizle();
     setMod(null);
     setPhase("playing");
   };
@@ -392,6 +426,22 @@ export default function SonSaniyeScreen() {
             <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
           </TouchableOpacity>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ─── GERİ SAYIM EKRANI (harfler gizli, kimse önden başlamasın) ──
+  if (geriSayim.aktif) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
+        <GeriSayim
+          kalan={geriSayim.kalan!}
+          renk="#c8ff3e"
+          baslik={`SON SANİYE · ${mod === "dokunmali" ? "DOKUNMALI" : "YAZMALI"}`}
+        />
+        <TouchableOpacity style={styles.backButton} onPress={modDegistir}>
+          <Text style={styles.backText}>Mod Değiştir</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
