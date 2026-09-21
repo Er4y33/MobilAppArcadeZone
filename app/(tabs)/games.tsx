@@ -1,13 +1,90 @@
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import {
+  Dimensions,
+  Image,
+  ImageSourcePropType,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSound } from "../../context/SoundContext";
 import { useTheme } from "../../context/ThemeContext";
 
+type Oyun = {
+  id: string;
+  baslik: string;
+  aciklama: string;
+  emoji: string;
+  renkAnahtari:
+    | "gameReaction"
+    | "gameMemory"
+    | "gameWord"
+    | "gameMath"
+    | "gamePattern";
+  // Görsel hazır olunca: gorsel: require("../../assets/games/memory.png")
+  gorsel?: ImageSourcePropType;
+};
+
+const OYUNLAR: Oyun[] = [
+  {
+    id: "reaction",
+    baslik: "Tepki Testi",
+    aciklama: "Yeşili gör, anında dokun. Refleksini ölç.",
+    emoji: "⚡",
+    renkAnahtari: "gameReaction",
+  },
+  {
+    id: "memory",
+    baslik: "Hafıza Eşleştirme",
+    aciklama: "Kartları ezberle, çiftleri en az hamleyle bul.",
+    emoji: "🧠",
+    renkAnahtari: "gameMemory",
+  },
+  {
+    id: "sonsaniye",
+    baslik: "Son Saniye",
+    aciklama: "Karışık harflerden kelimeyi çöz, süreyi uzat.",
+    emoji: "⏱",
+    renkAnahtari: "gameWord",
+  },
+  {
+    id: "mathrush",
+    baslik: "Sayı Avı",
+    aciklama: "10 soru, sayaç işliyor. Hızlı olan kazanır.",
+    emoji: "🔢",
+    renkAnahtari: "gameMath",
+  },
+  {
+    id: "pattern",
+    baslik: "Sırayı Takip Et",
+    aciklama: "Renk dizisini izle ve aynı sırayla tekrarla.",
+    emoji: "🎯",
+    renkAnahtari: "gamePattern",
+  },
+];
+
+const KENAR = 20; // ScrollView yatay padding
+const ARA = 14; // kartlar arası boşluk
+const { width: EKRAN_G } = Dimensions.get("window");
+const KART_G = Math.floor((EKRAN_G - KENAR * 2 - ARA) / 2);
+
 export default function GamesScreen() {
   const { colors } = useTheme();
   const { cal } = useSound();
+
+  const ac = (oyun: Oyun) => {
+    cal("click");
+    router.push({
+      pathname: "/game/[id]",
+      params: { id: oyun.id, title: oyun.baslik },
+    });
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -17,151 +94,107 @@ export default function GamesScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.title, { color: colors.text }]}>Oyunlar</Text>
+        <Text style={[styles.altBaslik, { color: colors.textMuted }]}>
+          {OYUNLAR.length} oyun · Oynadıkça XP kazan
+        </Text>
 
-        <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.surface,
-              borderLeftColor: colors.gameReaction,
-            },
-          ]}
-          onPress={() => {
-            cal("click");
-            router.push({
-              pathname: "/game/[id]",
-              params: { id: "reaction", title: "Tepki Testi" },
-            });
-          }}
-        >
-          <Text style={[styles.cardTitle, { color: colors.text }]}>
-            Tepki Testi
-          </Text>
-          <Text style={[styles.cardText, { color: colors.textMuted }]}>
-            Hızlı tepki verme oyunu
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.izgara}>
+          {OYUNLAR.map((oyun, i) => {
+            const vurgu = colors[oyun.renkAnahtari];
 
-        <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.surface,
-              borderLeftColor: colors.gameMemory,
-            },
-          ]}
-          onPress={() =>
-            router.push({
-              pathname: "/game/[id]",
-              params: { id: "memory", title: "Hafıza Eşleştirme" },
-            })
-          }
-        >
-          <Text style={[styles.cardTitle, { color: colors.text }]}>
-            Hafıza Eşleştirme
-          </Text>
-          <Text style={[styles.cardText, { color: colors.textMuted }]}>
-            Kart eşleştirme oyunu
-          </Text>
-        </TouchableOpacity>
+            return (
+              <Animated.View
+                key={oyun.id}
+                entering={FadeInDown.delay(i * 60).duration(320)}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.kart,
+                    { width: KART_G, backgroundColor: colors.surface },
+                  ]}
+                  onPress={() => ac(oyun)}
+                  activeOpacity={0.85}
+                >
+                  {/* Görsel kutu — görsel yoksa renkli zemin + emoji */}
+                  <View style={[styles.gorselKutu, { backgroundColor: vurgu }]}>
+                    {oyun.gorsel ? (
+                      <Image
+                        source={oyun.gorsel}
+                        style={styles.gorsel}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Text style={styles.emoji}>{oyun.emoji}</Text>
+                    )}
+                  </View>
 
-        <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.surface,
-              borderLeftColor: colors.gameWord,
-            },
-          ]}
-          onPress={() =>
-            router.push({
-              pathname: "/game/[id]",
-              params: { id: "sonsaniye", title: "Son Saniye" },
-            })
-          }
-        >
-          <Text style={[styles.cardTitle, { color: colors.text }]}>
-            Son Saniye
-          </Text>
-          <Text style={[styles.cardText, { color: colors.textMuted }]}>
-            Karışık harfli kelime çözme oyunu
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.surface,
-              borderLeftColor: colors.gameMath,
-            },
-          ]}
-          onPress={() =>
-            router.push({
-              pathname: "/game/[id]",
-              params: { id: "mathrush", title: "Sayı Avı" },
-            })
-          }
-        >
-          <Text style={[styles.cardTitle, { color: colors.text }]}>
-            Sayı Avı
-          </Text>
-          <Text style={[styles.cardText, { color: colors.textMuted }]}>
-            Hızlı matematik oyunu
-          </Text>
-        </TouchableOpacity>
+                  <View style={styles.metinAlani}>
+                    <Text
+                      style={[styles.kartBaslik, { color: colors.text }]}
+                      numberOfLines={1}
+                    >
+                      {oyun.baslik}
+                    </Text>
+                    <Text
+                      style={[styles.kartAciklama, { color: colors.textMuted }]}
+                      numberOfLines={2}
+                    >
+                      {oyun.aciklama}
+                    </Text>
+                  </View>
 
-        <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              backgroundColor: colors.surface,
-              borderLeftColor: colors.gamePattern,
-            },
-          ]}
-          onPress={() =>
-            router.push({
-              pathname: "/game/[id]",
-              params: { id: "pattern", title: "Sırayı Takip Et" },
-            })
-          }
-        >
-          <Text style={[styles.cardTitle, { color: colors.text }]}>
-            Sırayı Takip Et
-          </Text>
-          <Text style={[styles.cardText, { color: colors.textMuted }]}>
-            Renk sırası hafıza oyunu
-          </Text>
-        </TouchableOpacity>
+                  {/* Alt vurgu şeridi — oyunun rengi */}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   icerik: {
-    padding: 20,
+    paddingHorizontal: KENAR,
+    paddingTop: 8,
     paddingBottom: 32,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    marginBottom: 20,
+  title: { fontSize: 28, fontWeight: "800", marginBottom: 4 },
+  altBaslik: { fontSize: 14, marginBottom: 20 },
+
+  izgara: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: ARA,
   },
-  card: {
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
-    borderLeftWidth: 6,
+
+  kart: {
+    borderRadius: 18,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 6,
+  gorselKutu: {
+    width: "100%",
+    height: KART_G * 0.62,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  cardText: {
-    fontSize: 14,
+  gorsel: { width: "100%", height: "100%" },
+  emoji: { fontSize: KART_G * 0.3 },
+
+  metinAlani: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+    minHeight: 76, // açıklama 1 veya 2 satır olsa da kartlar eşit boyda
   },
+  kartBaslik: { fontSize: 15, fontWeight: "800", marginBottom: 4 },
+  kartAciklama: { fontSize: 12, lineHeight: 16 },
 });
