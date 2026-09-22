@@ -1,11 +1,12 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
@@ -13,13 +14,17 @@ import { supabase } from "../../lib/supabase";
 
 export default function ForgotPasswordScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
 
   const handleReset = async () => {
     const trimmed = email.trim();
     if (!trimmed) {
-      Alert.alert("E-posta gerekli", "Lütfen e-posta adresini gir.");
+      Alert.alert(
+        t("sifreSifirla.epostaGerekli"),
+        t("sifreSifirla.epostaZorunlu"),
+      );
       return;
     }
 
@@ -28,14 +33,14 @@ export default function ForgotPasswordScreen() {
     setSending(false);
 
     if (error) {
-      Alert.alert("Gönderilemedi", error.message);
+      Alert.alert(t("sifreSifirla.gonderilemedi"), error.message);
       return;
     }
 
     Alert.alert(
-      "E-posta gönderildi",
-      "Şifre sıfırlama bağlantısı e-posta adresine gönderildi. Gelen kutunu kontrol et.",
-      [{ text: "Tamam", onPress: () => router.back() }],
+      t("sifreSifirla.gonderildiBaslik"),
+      t("sifreSifirla.gonderildiMesaj"),
+      [{ text: t("ortak.tamam"), onPress: () => router.back() }],
     );
   };
 
@@ -44,14 +49,14 @@ export default function ForgotPasswordScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <Text style={[styles.title, { color: colors.text }]}>
-        Şifremi Unuttum
+        {t("sifreSifirla.baslik")}
       </Text>
       <Text style={[styles.sub, { color: colors.textMuted }]}>
-        Hesabına kayıtlı e-posta adresini gir, sıfırlama bağlantısı gönderelim.
+        {t("sifreSifirla.altBaslik")}
       </Text>
 
       <Text style={[styles.label, { color: colors.textMuted }]}>
-        E-Posta Adresi
+        {t("giris.eposta")}
       </Text>
       <TextInput
         style={[
@@ -66,7 +71,7 @@ export default function ForgotPasswordScreen() {
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
-        placeholder="ornek@mail.com"
+        placeholder={t("giris.epostaOrnek")}
         placeholderTextColor={colors.textMuted}
       />
 
@@ -76,13 +81,13 @@ export default function ForgotPasswordScreen() {
         disabled={sending}
       >
         <Text style={styles.btnText}>
-          {sending ? "GÖNDERİLİYOR..." : "BAĞLANTI GÖNDER"}
+          {sending ? t("sifreSifirla.btnGonderiliyor") : t("sifreSifirla.btn")}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.back()}>
         <Text style={[styles.back, { color: colors.textMuted }]}>
-          Giriş ekranına dön
+          {t("sifreSifirla.girisEkraninaDon")}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

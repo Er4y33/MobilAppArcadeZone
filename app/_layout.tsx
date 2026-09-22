@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "../context/AuthContext";
 import { HapticsProvider } from "../context/HapticsContext";
@@ -10,6 +11,7 @@ import { dilBaslat } from "../lib/i18n";
 
 function RootNavigator() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Stack
@@ -26,31 +28,31 @@ function RootNavigator() {
       <Stack.Screen name="(drawer)" />
       <Stack.Screen
         name="game/[id]"
-        options={{ headerShown: true, title: "Oyun Detayı" }}
+        options={{ headerShown: true, title: t("oyun.detay") }}
       />
       <Stack.Screen
         name="game/play/reaction"
-        options={{ headerShown: true, title: "Tepki Testi" }}
+        options={{ headerShown: true, title: t("oyunlar.reaction.ad") }}
       />
       <Stack.Screen
         name="game/play/memory"
-        options={{ headerShown: true, title: "Hafıza Eşleştirme" }}
+        options={{ headerShown: true, title: t("oyunlar.memory.ad") }}
       />
       <Stack.Screen
         name="game/play/sonsaniye"
-        options={{ headerShown: true, title: "Son Saniye" }}
+        options={{ headerShown: true, title: t("oyunlar.sonsaniye.ad") }}
       />
       <Stack.Screen
         name="game/play/mathrush"
-        options={{ headerShown: true, title: "Sayı Avı" }}
+        options={{ headerShown: true, title: t("oyunlar.mathrush.ad") }}
       />
       <Stack.Screen
         name="game/play/pattern"
-        options={{ headerShown: true, title: "Sırayı Takip Et" }}
+        options={{ headerShown: true, title: t("oyunlar.pattern.ad") }}
       />
       <Stack.Screen
         name="about"
-        options={{ headerShown: true, title: "Hakkında" }}
+        options={{ headerShown: true, title: t("hakkinda.baslik") }}
       />
     </Stack>
   );

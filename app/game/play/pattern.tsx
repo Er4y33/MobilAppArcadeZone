@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   StyleSheet,
@@ -38,40 +39,18 @@ const RENKLER = [
   { id: 8, base: "#477b11", active: "#84CC16" }, // fıstık yeşili
 ];
 
+// Etiketler locales/*.json'da: zorluk.<z> ve oyunAyar.pattern.<z>
 type ZorlukAyari = {
   renkSayisi: number;
   sutun: number;
   satir: number;
   gosterSure: number;
-  etiket: string;
-  aciklama: string;
 };
 
 const AYARLAR: Record<Difficulty, ZorlukAyari> = {
-  kolay: {
-    renkSayisi: 4,
-    sutun: 2,
-    satir: 2,
-    gosterSure: 600,
-    etiket: "KOLAY",
-    aciklama: "4 renk · 2x2",
-  },
-  orta: {
-    renkSayisi: 6,
-    sutun: 2,
-    satir: 3,
-    gosterSure: 550,
-    etiket: "ORTA",
-    aciklama: "6 renk · 2x3",
-  },
-  zor: {
-    renkSayisi: 9,
-    sutun: 3,
-    satir: 3,
-    gosterSure: 480,
-    etiket: "ZOR",
-    aciklama: "9 renk · 3x3",
-  },
+  kolay: { renkSayisi: 4, sutun: 2, satir: 2, gosterSure: 600 },
+  orta: { renkSayisi: 6, sutun: 2, satir: 3, gosterSure: 550 },
+  zor: { renkSayisi: 9, sutun: 3, satir: 3, gosterSure: 480 },
 };
 
 const ARA_SURE = 250;
@@ -98,7 +77,9 @@ export default function PatternSequenceScreen() {
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const { addScore } = useScores();
   const { cal } = useSound();
+  const { t } = useTranslation();
   const ayar = zorluk ? AYARLAR[zorluk] : null;
+  const zorlukAdi = zorluk ? t(`zorluk.${zorluk}`) : "";
 
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach(clearTimeout);
@@ -226,8 +207,10 @@ export default function PatternSequenceScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.secimBox}>
           <Text style={styles.secimEmoji}>🎯</Text>
-          <Text style={styles.secimBaslik}>SIRAYI TAKİP ET</Text>
-          <Text style={styles.secimAlt}>Zorluk seç</Text>
+          <Text style={styles.secimBaslik}>
+            {t("skorTablosu.sekme.pattern")}
+          </Text>
+          <Text style={styles.secimAlt}>{t("zorluk.sec")}</Text>
 
           {(["kolay", "orta", "zor"] as Difficulty[]).map((z, i) => (
             <Animated.View
@@ -240,8 +223,10 @@ export default function PatternSequenceScreen() {
                 onPress={() => oyunBaslat(z)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.zorlukBtnText}>{AYARLAR[z].etiket}</Text>
-                <Text style={styles.zorlukBtnSub}>{AYARLAR[z].aciklama}</Text>
+                <Text style={styles.zorlukBtnText}>{t(`zorluk.${z}`)}</Text>
+                <Text style={styles.zorlukBtnSub}>
+                  {t(`oyunAyar.pattern.${z}`)}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -250,7 +235,7 @@ export default function PatternSequenceScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>Geri Dön</Text>
+            <Text style={styles.backText}>{t("ortak.geriDon")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -278,9 +263,11 @@ export default function PatternSequenceScreen() {
           </Animated.Text>
 
           <Text style={styles.resultTitle}>
-            {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
+            {stars === 3 ? t("oyun.mukemmel") : t("oyun.bolumTamam")}
           </Text>
-          <Text style={styles.resultSub}>Sırayı Takip Et · {ayar!.etiket}</Text>
+          <Text style={styles.resultSub}>
+            {t("oyunlar.pattern.ad")} · {zorlukAdi}
+          </Text>
 
           <Animated.View
             style={styles.starsRow}
@@ -298,16 +285,16 @@ export default function PatternSequenceScreen() {
 
           <View style={styles.statsBox}>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Ulaşılan Seviye</Text>
+              <Text style={styles.statLabel}>{t("oyun.ulasilanSeviye")}</Text>
               <Text style={styles.statValue}>{finalScore + 1}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Tamamlanan Tur</Text>
+              <Text style={styles.statLabel}>{t("oyun.tamamlananTur")}</Text>
               <Text style={styles.statValue}>{finalScore}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Zorluk</Text>
-              <Text style={styles.statValue}>{ayar!.etiket}</Text>
+              <Text style={styles.statLabel}>{t("ortak.zorluk")}</Text>
+              <Text style={styles.statValue}>{zorlukAdi}</Text>
             </View>
           </View>
 
@@ -315,25 +302,33 @@ export default function PatternSequenceScreen() {
             style={styles.xpBox}
             entering={FadeInDown.delay(300).duration(400)}
           >
-            <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
+            <Text style={styles.xpText}>
+              {t("oyun.xpKazandin", { xp: earnedXP })}
+            </Text>
           </Animated.View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={yenidenOyna}>
-            <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
+            <Text style={styles.btnPrimaryText}>
+              {t("ortak.yenidenOynaBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={zorluguDegistir}
           >
-            <Text style={styles.btnSecondaryText}>ZORLUK DEĞİŞTİR</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.zorlukDegistirBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={() => router.replace("/(drawer)/(tabs)")}
           >
-            <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.anaMenuBuyuk")}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -347,10 +342,10 @@ export default function PatternSequenceScreen() {
         <GeriSayim
           kalan={geriSayim.kalan!}
           renk="#FBBF24"
-          baslik={`SIRAYI TAKİP ET · ${ayar!.etiket}`}
+          baslik={`${t("skorTablosu.sekme.pattern")} · ${zorlukAdi}`}
         />
         <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
-          <Text style={styles.backText}>Zorluk Değiştir</Text>
+          <Text style={styles.backText}>{t("ortak.zorlukDegistir")}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -361,12 +356,12 @@ export default function PatternSequenceScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerLabel}>SEVİYE</Text>
+          <Text style={styles.headerLabel}>{t("oyun.seviye")}</Text>
           <Text style={styles.headerValue}>{level}</Text>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.gameTitle}>SIRAYI TAKİP ET</Text>
-          <Text style={styles.gameSub}>{ayar!.etiket}</Text>
+          <Text style={styles.gameTitle}>{t("skorTablosu.sekme.pattern")}</Text>
+          <Text style={styles.gameSub}>{zorlukAdi}</Text>
         </View>
         <View style={styles.headerRight} />
       </View>
@@ -375,7 +370,7 @@ export default function PatternSequenceScreen() {
         <Text
           style={[styles.statusText, !isShowingSequence && styles.statusSira]}
         >
-          {isShowingSequence ? "İzle..." : "Şimdi sen tekrarla!"}
+          {isShowingSequence ? t("oyun.izle") : t("oyun.simdiSen")}
         </Text>
       </View>
 
@@ -401,7 +396,7 @@ export default function PatternSequenceScreen() {
       </View>
 
       <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
-        <Text style={styles.backText}>Zorluk Değiştir</Text>
+        <Text style={styles.backText}>{t("ortak.zorlukDegistir")}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

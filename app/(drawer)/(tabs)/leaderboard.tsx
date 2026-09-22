@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -35,12 +36,13 @@ type LeaderboardEntry = {
   total_plays: number;
 };
 
-const GAMES: { key: GameKey; label: string }[] = [
-  { key: "reaction", label: "TEPKİ" },
-  { key: "memory", label: "HAFIZA" },
-  { key: "sonsaniye", label: "SON SANİYE" },
-  { key: "mathrush", label: "SAYI AVI" },
-  { key: "pattern", label: "SIRAYI TAKİP ET" },
+// Etiketler locales/*.json'dan: skorTablosu.sekme.<id>
+const GAMES: GameKey[] = [
+  "reaction",
+  "memory",
+  "sonsaniye",
+  "mathrush",
+  "pattern",
 ];
 
 const LOWER_IS_BETTER: Record<GameKey, boolean> = {
@@ -49,6 +51,15 @@ const LOWER_IS_BETTER: Record<GameKey, boolean> = {
   sonsaniye: false,
   mathrush: false,
   pattern: false,
+};
+
+// Skor birimi — veritabanındaki score_label yerine dil dosyasından
+const BIRIM: Record<GameKey, string> = {
+  reaction: "ms",
+  memory: "hamle",
+  sonsaniye: "puan",
+  mathrush: "puan",
+  pattern: "seviye",
 };
 
 // Zorluk seçimi olan oyunlar
@@ -69,19 +80,19 @@ const VARSAYILAN_ZORLUK: Record<GameKey, Difficulty> = {
   pattern: "kolay",
 };
 
-type ZorlukSecenek = { key: Difficulty; label: string };
+type ZorlukSecenek = { key: Difficulty; anahtar: string };
 
 const VARSAYILAN_SECENEKLER: ZorlukSecenek[] = [
-  { key: "kolay", label: "KOLAY" },
-  { key: "orta", label: "ORTA" },
-  { key: "zor", label: "ZOR" },
+  { key: "kolay", anahtar: "zorluk.kolay" },
+  { key: "orta", anahtar: "zorluk.orta" },
+  { key: "zor", anahtar: "zorluk.zor" },
 ];
 
 // Son Saniye'de zorluk yerine mod var — etiketler farklı, "zor" seçeneği yok
 const ZORLUK_SECENEKLERI: Partial<Record<GameKey, ZorlukSecenek[]>> = {
   sonsaniye: [
-    { key: "kolay", label: "DOKUNMALI" },
-    { key: "orta", label: "YAZMALI" },
+    { key: "kolay", anahtar: "zorluk.dokunmali" },
+    { key: "orta", anahtar: "zorluk.yazmali" },
   ],
 };
 
@@ -98,6 +109,7 @@ function gosterilenAd(satir: LeaderboardEntry): string {
 export default function LeaderboardScreen() {
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [selectedGame, setSelectedGame] = useState<GameKey>("reaction");
   const [selectedDifficulty, setSelectedDifficulty] =
     useState<Difficulty>("orta");
@@ -144,10 +156,10 @@ export default function LeaderboardScreen() {
   };
 
   const sekmeDegistir = (yon: 1 | -1) => {
-    const i = GAMES.findIndex((g) => g.key === selectedGame);
+    const i = GAMES.indexOf(selectedGame);
     const yeni = i + yon;
     if (yeni < 0 || yeni >= GAMES.length) return;
-    oyunSec(GAMES[yeni].key);
+    oyunSec(GAMES[yeni]);
   };
 
   const solaKaydir = Gesture.Fling()
@@ -169,6 +181,7 @@ export default function LeaderboardScreen() {
     : 0;
 
   const zorlukGoster = ZORLUKLU[selectedGame];
+  const birimMetni = t(`birim.${BIRIM[selectedGame]}`);
 
   return (
     <SafeAreaView
@@ -183,24 +196,24 @@ export default function LeaderboardScreen() {
         >
           {GAMES.map((game) => (
             <TouchableOpacity
-              key={game.key}
+              key={game}
               style={[
                 styles.tab,
-                selectedGame === game.key && { backgroundColor: colors.accent },
+                selectedGame === game && { backgroundColor: colors.accent },
               ]}
-              onPress={() => oyunSec(game.key)}
+              onPress={() => oyunSec(game)}
             >
               <Text
                 style={[
                   styles.tabText,
                   { color: colors.textMuted },
-                  selectedGame === game.key && {
+                  selectedGame === game && {
                     color: colors.background,
                     fontWeight: "900",
                   },
                 ]}
               >
-                {game.label}
+                {t(`skorTablosu.sekme.${game}`)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -234,7 +247,7 @@ export default function LeaderboardScreen() {
                     },
                   ]}
                 >
-                  {z.label}
+                  {t(z.anahtar)}
                 </Text>
               </TouchableOpacity>
             ),
@@ -263,12 +276,12 @@ export default function LeaderboardScreen() {
                 style={[styles.emptyBox, { backgroundColor: colors.surface }]}
               >
                 <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                  Henüz skor yok
+                  {t("skorTablosu.henuzYok")}
                 </Text>
                 <Text style={[styles.emptySub, { color: colors.textMuted }]}>
                   {zorlukGoster
-                    ? "Bu zorlukta ilk oynayan sen ol!"
-                    : "İlk oynayan sen ol!"}
+                    ? t("skorTablosu.ilkSenOlZorluk")
+                    : t("skorTablosu.ilkSenOl")}
                 </Text>
               </View>
             ) : (
@@ -325,10 +338,12 @@ export default function LeaderboardScreen() {
                         ]}
                         numberOfLines={1}
                       >
-                        {ad} {isMe && "(Sen)"}
+                        {ad} {isMe && `(${t("skorTablosu.sen")})`}
                       </Text>
                       <Text style={[styles.sub, { color: colors.textMuted }]}>
-                        {entry.total_plays} kez oynadı
+                        {t("skorTablosu.kezOynadi", {
+                          sayi: entry.total_plays,
+                        })}
                       </Text>
                     </View>
 
@@ -339,7 +354,7 @@ export default function LeaderboardScreen() {
                       <Text
                         style={[styles.scoreLabel, { color: colors.textMuted }]}
                       >
-                        {entry.score_label}
+                        {birimMetni}
                       </Text>
                     </View>
                   </View>
@@ -355,7 +370,7 @@ export default function LeaderboardScreen() {
           style={[styles.myRankFooter, { backgroundColor: colors.surface }]}
         >
           <Text style={[styles.myRankText, { color: colors.textMuted }]}>
-            Senin Sıran:{" "}
+            {t("skorTablosu.seninSiran")}{" "}
             <Text style={[styles.myRankAccent, { color: colors.primary }]}>
               #{myRank}
             </Text>

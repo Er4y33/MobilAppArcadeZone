@@ -14,7 +14,18 @@
     "coin": "coin",
     "seviye": "Seviye",
     "xp": "XP",
-    "puan": "Puan"
+    "puan": "Puan",
+    "ileri": "İLERİ",
+    "basla": "BAŞLA",
+    "anaMenuBuyuk": "ANA MENÜ",
+    "oyuncu": "Oyuncu",
+    "geriDonBuyuk": "GERİ DÖN",
+    "yenidenOynaBuyuk": "YENİDEN OYNA",
+    "zorlukDegistirBuyuk": "ZORLUK DEĞİŞTİR",
+    "modDegistirBuyuk": "MOD DEĞİŞTİR",
+    "saniyeKisa": "sn",
+    "zorluk": "Zorluk",
+    "hata": "Hata"
   },
   "sekmeler": {
     "anaMenu": "Ana Menü",
@@ -35,23 +46,33 @@
     "altBaslik": "{{sayi}} oyun · Oynadıkça XP kazan",
     "reaction": {
       "ad": "Tepki Testi",
-      "aciklama": "Yeşili gör, anında dokun. Refleksini ölç."
+      "aciklama": "Yeşili gör, anında dokun. Refleksini ölç.",
+      "kisa": "Tepki",
+      "nasil": "Ekran yeşile döndüğü anda dokun. Ne kadar hızlısan skorun o kadar iyi — erken dokunursan tur iptal olur."
     },
     "memory": {
       "ad": "Hafıza Eşleştirme",
-      "aciklama": "Kartları ezberle, çiftleri en az hamleyle bul."
+      "aciklama": "Kartları ezberle, çiftleri en az hamleyle bul.",
+      "kisa": "Hafıza",
+      "nasil": "Kartlar 3 saniye açık kalır, yerlerini aklında tut. Sonra eşlerini bul — az hamleyle bitirmek daha iyi skor demek."
     },
     "sonsaniye": {
       "ad": "Son Saniye",
-      "aciklama": "Karışık harflerden kelimeyi çöz, süreyi uzat."
+      "aciklama": "Karışık harflerden kelimeyi çöz, süreyi uzat.",
+      "kisa": "Son Saniye",
+      "nasil": "Karışık harflerden kelimeyi bul! Her doğru cevap puan ve süre kazandırır. İki mod var: harflere dokunarak ya da klavyeyle yazarak."
     },
     "mathrush": {
       "ad": "Sayı Avı",
-      "aciklama": "10 soru, sayaç işliyor. Hızlı olan kazanır."
+      "aciklama": "10 soru, sayaç işliyor. Hızlı olan kazanır.",
+      "kisa": "Sayı Avı",
+      "nasil": "Ekranda beliren işlemi çöz ve doğru cevabı süre dolmadan seç! Hızlı cevap ekstra puan kazandırır."
     },
     "pattern": {
       "ad": "Sırayı Takip Et",
-      "aciklama": "Renk dizisini izle ve aynı sırayla tekrarla."
+      "aciklama": "Renk dizisini izle ve aynı sırayla tekrarla.",
+      "kisa": "Sırayı Takip",
+      "nasil": "Yanıp sönen renk sırasını izle, sonra aynı sırayla dokun. Her doğru turda sıra bir adım uzar!"
     }
   },
   "zorluk": {
@@ -85,7 +106,13 @@
     "dogruCevap": "Doğru Cevap",
     "toplamPuan": "Toplam Puan",
     "ulasilanSeviye": "Ulaşılan Seviye",
-    "tamamlananTur": "Tamamlanan Tur"
+    "tamamlananTur": "Tamamlanan Tur",
+    "detay": "Oyun Detayı",
+    "puan": "PUAN",
+    "nasilOynanir": "NASIL OYNANIR?",
+    "enIyiSkorun": "EN İYİ SKORUN",
+    "henuzOynamadin": "Henüz oynamadın",
+    "oyna": "OYNA"
   },
   "skorTablosu": {
     "baslik": "Skor",
@@ -94,7 +121,14 @@
     "ilkSenOlZorluk": "Bu zorlukta ilk oynayan sen ol!",
     "kezOynadi": "{{sayi}} kez oynadı",
     "seninSiran": "Senin Sıran:",
-    "sen": "Sen"
+    "sen": "Sen",
+    "sekme": {
+      "reaction": "TEPKİ",
+      "memory": "HAFIZA",
+      "sonsaniye": "SON SANİYE",
+      "mathrush": "SAYI AVI",
+      "pattern": "SIRAYI TAKİP ET"
+    }
   },
   "ayarlar": {
     "baslik": "Ayarlar",
@@ -117,14 +151,88 @@
     "oynananOyun": "Oynanan Oyun",
     "enIyiRozet": "EN İYİ ROZET",
     "oyunDagilimi": "Oyun Dağılımı",
-    "enCokOynadigin": "En çok oynadığın:"
+    "enCokOynadigin": "En çok oynadığın:",
+    "seviyeBuyuk": "SEVİYE {{n}}",
+    "enIyiSkorlar": "En İyi Skorlar",
+    "henuzOynamadin": "Henüz oyun oynamadın",
+    "son7Gun": "Son 7 Günlük Aktivite",
+    "buHaftaToplam": "Bu hafta toplam {{sayi}} oyun"
   },
   "gorevler": {
     "baslik": "Görevler",
     "tamamlanan": "TAMAMLANAN",
     "coinAlindi": "{{alinan}} / {{toplam}} coin alındı",
     "yenilendi": "Görevler {{tarih}} tarihinde yenilendi",
-    "kalanGun": "Yeni görevlere {{gun}} gün kaldı"
+    "kalanGun": "Yeni görevlere {{gun}} gün kaldı",
+    "tamamlandi": "Tamamlandı!",
+    "enIyi": "En iyi: {{sayi}}",
+    "odulAl": "🪙 {{sayi}} ÖDÜLÜ AL",
+    "odulAlindiBtn": "✓ ÖDÜL ALINDI",
+    "odulAlinamadi": "Ödül alınamadı",
+    "odulAlindiBaslik": "Ödül alındı!",
+    "coinEklendi": "🪙 {{sayi}} coin hesabına eklendi.",
+    "liste": {
+      "reaction_play_5": {
+        "baslik": "Isınma Turu",
+        "aciklama": "Tepki Testi'ni 5 kez oyna"
+      },
+      "reaction_under_200": {
+        "baslik": "Şimşek Refleks",
+        "aciklama": "Tepki Testi'nde 200 ms altına in"
+      },
+      "reaction_under_120": {
+        "baslik": "Yıldırım Hızı",
+        "aciklama": "Tepki Testi'nde 120 ms altına in"
+      },
+      "memory_play_5": {
+        "baslik": "Kart Delisi",
+        "aciklama": "Hafıza Eşleştirme'yi 5 kez oyna"
+      },
+      "memory_under_14": {
+        "baslik": "Keskin Hafıza",
+        "aciklama": "Hafıza Eşleştirme'yi 14 hamleden az bitir"
+      },
+      "memory_under_12": {
+        "baslik": "Fotoğrafik Hafıza",
+        "aciklama": "Hafıza Eşleştirme'yi 12 hamleden az bitir"
+      },
+      "sonsaniye_play_3": {
+        "baslik": "Kelime Avcısı",
+        "aciklama": "Son Saniye'yi 3 kez oyna"
+      },
+      "sonsaniye_over_200": {
+        "baslik": "Sözcük Dağarcığı",
+        "aciklama": "Son Saniye'de 200 puanı geç"
+      },
+      "sonsaniye_over_400": {
+        "baslik": "Kelime Ustası",
+        "aciklama": "Son Saniye'de 400 puanı geç"
+      },
+      "mathrush_play_3": {
+        "baslik": "Matematik Sever",
+        "aciklama": "Sayı Avı'nı 3 kez oyna"
+      },
+      "mathrush_over_150": {
+        "baslik": "Hesap Makinesi",
+        "aciklama": "Sayı Avı'nda 150 puanı geç"
+      },
+      "mathrush_over_220": {
+        "baslik": "Sayı Dehası",
+        "aciklama": "Sayı Avı'nda 220 puanı geç"
+      },
+      "pattern_play_3": {
+        "baslik": "Sıra Takipçisi",
+        "aciklama": "Sırayı Takip Et'i 3 kez oyna"
+      },
+      "pattern_reach_8": {
+        "baslik": "Dizi Avcısı",
+        "aciklama": "Sırayı Takip Et'te 8. seviyeye ulaş"
+      },
+      "pattern_reach_12": {
+        "baslik": "Dizi Efsanesi",
+        "aciklama": "Sırayı Takip Et'te 12. seviyeye ulaş"
+      }
+    }
   },
   "magaza": {
     "baslik": "Mağaza",
@@ -133,7 +241,65 @@
     "unvanlar": "UNVANLAR",
     "kusan": "KUŞAN",
     "satinAl": "SATIN AL",
-    "kusanildi": "KUŞANILDI"
+    "kusanildi": "KUŞANILDI",
+    "satinAlBaslik": "Satın Al",
+    "satinAlSoru": "\"{{ad}}\" ürününü {{fiyat}} coin karşılığında almak istiyor musun?",
+    "satinAlinamadi": "Satın alınamadı",
+    "tebrikler": "Tebrikler!",
+    "artikSenin": "\"{{ad}}\" artık senin.",
+    "islemBasarisiz": "İşlem başarısız",
+    "kusanildiKaldir": "KUŞANILDI — KALDIR",
+    "yetersiz": "🪙 {{fiyat}} — YETERSİZ",
+    "satinAlBtn": "🪙 {{fiyat}} — SATIN AL",
+    "urun": {
+      "frame_bronze": {
+        "ad": "Bronz Çerçeve",
+        "aciklama": "Klasik bronz avatar çerçevesi"
+      },
+      "frame_silver": {
+        "ad": "Gümüş Çerçeve",
+        "aciklama": "Parlak gümüş avatar çerçevesi"
+      },
+      "frame_gold": {
+        "ad": "Altın Çerçeve",
+        "aciklama": "Görkemli altın avatar çerçevesi"
+      },
+      "frame_neon": {
+        "ad": "Neon Çerçeve",
+        "aciklama": "Mor neon parıltılı çerçeve"
+      },
+      "frame_emerald": {
+        "ad": "Zümrüt Çerçeve",
+        "aciklama": "Yeşil zümrüt tonlu çerçeve"
+      },
+      "badge_rookie": {
+        "ad": "Çaylak",
+        "aciklama": "Yolculuğun başlangıcı"
+      },
+      "badge_speed": {
+        "ad": "Hız Tutkunu",
+        "aciklama": "Refleks ustalarına özel unvan"
+      },
+      "badge_brain": {
+        "ad": "Beyin Takımı",
+        "aciklama": "Hafıza şampiyonlarının unvanı"
+      },
+      "badge_word": {
+        "ad": "Kelime Kâşifi",
+        "aciklama": "Sözcük avcılarına özel unvan"
+      },
+      "badge_legend": {
+        "ad": "Efsane",
+        "aciklama": "Sadece en iyiler taşır"
+      }
+    },
+    "unvan": {
+      "badge_rookie": "🌱 ÇAYLAK",
+      "badge_speed": "⚡ HIZ TUTKUNU",
+      "badge_brain": "🧠 BEYİN TAKIMI",
+      "badge_word": "📖 KELİME KÂŞİFİ",
+      "badge_legend": "👑 EFSANE"
+    }
   },
   "hakkinda": {
     "baslik": "Hakkında",
@@ -142,6 +308,161 @@
     "ozelTesekkurler": "ÖZEL TEŞEKKÜRLER",
     "tesekkurMetni": "Tüm ArcadeZone Oyuncularına!",
     "gizlilikPolitikasi": "Gizlilik Politikası",
-    "tanitim": "ArcadeZone, refleks, hafıza, kelime ve matematik becerilerini geliştiren beş mini oyundan oluşan bir koleksiyondur. Bir okul projesi olarak başladı, sonrasında geliştirilerek yayınlandı."
+    "tanitim": "ArcadeZone, refleks, hafıza, kelime ve matematik becerilerini geliştiren beş mini oyundan oluşan bir koleksiyondur. Bir okul projesi olarak başladı, sonrasında geliştirilerek yayınlandı.",
+    "erayRol": "Geliştirme & Backend",
+    "erayDetay": "Oyun mekanikleri, zorluk sistemi, veritabanı mimarisi, skor ve ödül altyapısı, ses sistemi, yayın süreci",
+    "melihRol": "Arayüz Tasarımı",
+    "melihDetay": "İlk sürüm arayüz tasarımı ve görsel yönelim"
+  },
+  "onboarding": {
+    "s1baslik": "ArcadeZone'a Hoş Geldin!",
+    "s1aciklama": "5 farklı oyun, tek rekabet. Zirveye tırmanmaya hazır mısın?",
+    "s2baslik": "5 Farklı Oyun",
+    "s2aciklama": "Tepkini ölç, hafızanı zorla ve kelime bulmacalarını çöz. Her oyun farklı bir beceri ölçer.",
+    "s3baslik": "Tek Rekabet",
+    "s3aciklama": "Skorunu kaydet, lider tablosuna gir. En iyisi sen ol!"
+  },
+  "birim": {
+    "ms": "ms",
+    "hamle": "hamle",
+    "puan": "puan",
+    "seviye": "sv"
+  },
+  "gunler": {
+    "1": "Pzt",
+    "2": "Sal",
+    "3": "Çar",
+    "4": "Per",
+    "5": "Cum",
+    "6": "Cmt",
+    "7": "Paz"
+  },
+  "rozet": {
+    "efsanevi": "🏆 EFSANEVİ",
+    "elmas": "💎 ELMAS",
+    "tepkiUstasi": "⚡ TEPKİ USTASI",
+    "hafizaUzmani": "🧠 HAFIZA UZMANI",
+    "yukseliyor": "🌟 YÜKSELİYOR",
+    "yeniOyuncu": "🎮 YENİ OYUNCU"
+  },
+  "aylar": {
+    "1": "Ocak",
+    "2": "Şubat",
+    "3": "Mart",
+    "4": "Nisan",
+    "5": "Mayıs",
+    "6": "Haziran",
+    "7": "Temmuz",
+    "8": "Ağustos",
+    "9": "Eylül",
+    "10": "Ekim",
+    "11": "Kasım",
+    "12": "Aralık"
+  },
+  "oyunAyar": {
+    "memory": {
+      "kolay": "12 kart · 3x4",
+      "orta": "16 kart · 4x4",
+      "zor": "24 kart · 4x6"
+    },
+    "pattern": {
+      "kolay": "4 renk · 2x2",
+      "orta": "6 renk · 2x3",
+      "zor": "9 renk · 3x3"
+    },
+    "mathrush": {
+      "kolay": "Toplama · Çıkarma",
+      "orta": "+ − × ÷",
+      "zor": "+ − × ÷ √ x²"
+    }
+  },
+  "tema": {
+    "baslik": "Tema",
+    "meyve": "Meyve",
+    "hayvan": "Hayvan",
+    "nesne": "Nesne",
+    "renk": "Renk"
+  },
+  "tepki": {
+    "baslik": "TEPKİ TESTİ",
+    "hazirOl": "Hazır ol...",
+    "dokun": "DOKUN!",
+    "cokErken": "Çok erken!",
+    "yesileDonunce": "Yeşile dönünce dokun",
+    "simdi": "ŞİMDİ!",
+    "tekrarDene": "Tekrar denemek için dokun",
+    "inanilmaz": "İnanılmaz hız! ⚡",
+    "cokHizli": "Çok hızlı! 🔥",
+    "iyiTepki": "İyi tepki 👍",
+    "yavas": "Biraz yavaş, tekrar dene",
+    "enIyi": "EN İYİ",
+    "enIyiRozet": "EN İYİ: {{ms}} ms",
+    "skor": "SKOR",
+    "yeniRekor": "🎉 YENİ REKOR!"
+  },
+  "sonSaniye": {
+    "dokunmaliAlt": "Harflere sırayla bas · Klavye yok",
+    "yazmaliAlt": "Kelimeyi klavyeyle yaz · Klasik",
+    "dokunmaliMod": "Dokunmalı Mod",
+    "yazmaliMod": "Yazmalı Mod",
+    "kelimeyiYaz": "Kelimeyi yaz...",
+    "pasBtn": "PAS (-5)",
+    "toplamSkor": "TOPLAM SKOR",
+    "sureBitti": "SÜRE BİTTİ!",
+    "seviyeSatir": "Seviye {{no}} — {{ad}}",
+    "ulasilanSeviyeSatir": "Ulaşılan Seviye: {{simdi}} / {{toplam}}",
+    "dogruFeedback": "DOĞRU! +{{puan}} Puan, +5 Saniye",
+    "seviyeFeedback": "✨ SEVİYE {{seviye}}! +{{puan}} Puan",
+    "tumSeviyeler": "🎉 +{{puan}} Puan! Tüm seviyeler tamam!",
+    "yanlisTekrar": "YANLIŞ — Tekrar Dene",
+    "yanlisSaniye": "YANLIŞ — {{saniye}} saniye",
+    "pasFeedback": "Pas: {{kelime}} (-5 Puan)",
+    "seviyeAd": {
+      "1": "5 Harfli",
+      "2": "6 Harfli",
+      "3": "7 Harfli",
+      "4": "8 Harfli",
+      "5": "9+ Harfli"
+    }
+  },
+  "giris": {
+    "baslik": "Giriş Yap",
+    "altBaslik": "Hesabına gir ve oynamaya başla!",
+    "eposta": "E-Posta Adresi",
+    "epostaOrnek": "ornek@mail.com",
+    "sifre": "Şifre",
+    "btn": "OYUNA GİR",
+    "sifremiUnuttum": "Şifremi unuttum",
+    "hesabinYok": "Hesabın yok mu? ",
+    "kayitOl": "Kayıt Ol",
+    "zorunlu": "E-posta ve şifre zorunludur.",
+    "basarisiz": "Giriş Başarısız"
+  },
+  "kayit": {
+    "baslik": "Hesap Oluştur",
+    "altBaslik": "Katıl, oyna ve lider tablosuna gir!",
+    "kullaniciAdi": "Kullanıcı Adı",
+    "kullaniciAdiOrnek": "ArcadeKing",
+    "sifreOrnek": "En az 6 karakter",
+    "btn": "HESAP OLUŞTUR",
+    "zatenVar": "Zaten hesabın var mı? ",
+    "girisYap": "Giriş Yap",
+    "tumAlanlar": "Tüm alanlar zorunludur.",
+    "sifreKisa": "Şifre en az 6 karakter olmalıdır.",
+    "basarisiz": "Kayıt Başarısız",
+    "basarili": "Kayıt Başarılı! 🎉",
+    "basariliMesaj": "Hesabın oluşturuldu. Şimdi giriş yapabilirsin."
+  },
+  "sifreSifirla": {
+    "baslik": "Şifremi Unuttum",
+    "altBaslik": "Hesabına kayıtlı e-posta adresini gir, sıfırlama bağlantısı gönderelim.",
+    "btn": "BAĞLANTI GÖNDER",
+    "btnGonderiliyor": "GÖNDERİLİYOR...",
+    "girisEkraninaDon": "Giriş ekranına dön",
+    "epostaGerekli": "E-posta gerekli",
+    "epostaZorunlu": "Lütfen e-posta adresini gir.",
+    "gonderilemedi": "Gönderilemedi",
+    "gonderildiBaslik": "E-posta gönderildi",
+    "gonderildiMesaj": "Şifre sıfırlama bağlantısı e-posta adresine gönderildi. Gelen kutunu kontrol et."
   }
 }

@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   StyleSheet,
@@ -21,15 +22,14 @@ type CardType = {
 
 export type Tema = "meyve" | "hayvan" | "nesne" | "renk";
 
+// Tema adları locales/*.json'da: tema.<id>
 type TemaAyari = {
-  etiket: string;
   ikon: string;
   ogeler: string[]; // renk temasında hex kodları, diğerlerinde emoji
 };
 
 const TEMALAR: Record<Tema, TemaAyari> = {
   meyve: {
-    etiket: "Meyve",
     ikon: "🍎",
     ogeler: [
       "🍎",
@@ -47,7 +47,6 @@ const TEMALAR: Record<Tema, TemaAyari> = {
     ],
   },
   hayvan: {
-    etiket: "Hayvan",
     ikon: "🦊",
     ogeler: [
       "🦊",
@@ -65,7 +64,6 @@ const TEMALAR: Record<Tema, TemaAyari> = {
     ],
   },
   nesne: {
-    etiket: "Nesne",
     ikon: "⚽",
     ogeler: [
       "⚽",
@@ -83,7 +81,6 @@ const TEMALAR: Record<Tema, TemaAyari> = {
     ],
   },
   renk: {
-    etiket: "Renk",
     ikon: "🎨",
     ogeler: [
       "#EF4444", // kırmızı
@@ -107,32 +104,12 @@ type ZorlukAyari = {
   ciftSayisi: number;
   sutun: number;
   satir: number;
-  etiket: string;
-  aciklama: string;
 };
 
 const AYARLAR: Record<Difficulty, ZorlukAyari> = {
-  kolay: {
-    ciftSayisi: 6,
-    sutun: 3,
-    satir: 4,
-    etiket: "KOLAY",
-    aciklama: "12 kart · 3x4",
-  },
-  orta: {
-    ciftSayisi: 8,
-    sutun: 4,
-    satir: 4,
-    etiket: "ORTA",
-    aciklama: "16 kart · 4x4",
-  },
-  zor: {
-    ciftSayisi: 12,
-    sutun: 4,
-    satir: 6,
-    etiket: "ZOR",
-    aciklama: "24 kart · 4x6",
-  },
+  kolay: { ciftSayisi: 6, sutun: 3, satir: 4 },
+  orta: { ciftSayisi: 8, sutun: 4, satir: 4 },
+  zor: { ciftSayisi: 12, sutun: 4, satir: 6 },
 };
 
 const BOSLUK = 10;
@@ -185,7 +162,9 @@ export default function MemoryMatchScreen() {
   const eslesmemeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addScore } = useScores();
   const { cal } = useSound();
+  const { t } = useTranslation();
   const ayar = zorluk ? AYARLAR[zorluk] : null;
+  const zorlukAdi = zorluk ? t(`zorluk.${zorluk}`) : "";
 
   const zamanlayicilariTemizle = () => {
     if (eslesmemeTimer.current) {
@@ -317,31 +296,33 @@ export default function MemoryMatchScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.secimBox}>
           <Text style={styles.secimEmoji}>🧠</Text>
-          <Text style={styles.secimBaslik}>HAFIZA EŞLEŞTİRME</Text>
-          <Text style={styles.secimAlt}>Tema</Text>
+          <Text style={styles.secimBaslik}>
+            {t("skorTablosu.sekme.memory")}
+          </Text>
+          <Text style={styles.secimAlt}>{t("tema.baslik")}</Text>
 
           <View style={styles.temaSatiri}>
-            {(Object.keys(TEMALAR) as Tema[]).map((t) => (
+            {(Object.keys(TEMALAR) as Tema[]).map((temaId) => (
               <TouchableOpacity
-                key={t}
-                style={[styles.temaCip, tema === t && styles.temaCipAktif]}
-                onPress={() => setTema(t)}
+                key={temaId}
+                style={[styles.temaCip, tema === temaId && styles.temaCipAktif]}
+                onPress={() => setTema(temaId)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.temaIkon}>{TEMALAR[t].ikon}</Text>
+                <Text style={styles.temaIkon}>{TEMALAR[temaId].ikon}</Text>
                 <Text
                   style={[
                     styles.temaMetin,
-                    tema === t && styles.temaMetinAktif,
+                    tema === temaId && styles.temaMetinAktif,
                   ]}
                 >
-                  {TEMALAR[t].etiket}
+                  {t(`tema.${temaId}`)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.secimAlt}>Zorluk seç</Text>
+          <Text style={styles.secimAlt}>{t("zorluk.sec")}</Text>
 
           {(["kolay", "orta", "zor"] as Difficulty[]).map((z, i) => (
             <Animated.View
@@ -354,8 +335,10 @@ export default function MemoryMatchScreen() {
                 onPress={() => oyunBaslat(z)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.zorlukBtnText}>{AYARLAR[z].etiket}</Text>
-                <Text style={styles.zorlukBtnSub}>{AYARLAR[z].aciklama}</Text>
+                <Text style={styles.zorlukBtnText}>{t(`zorluk.${z}`)}</Text>
+                <Text style={styles.zorlukBtnSub}>
+                  {t(`oyunAyar.memory.${z}`)}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -364,7 +347,7 @@ export default function MemoryMatchScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>Geri Dön</Text>
+            <Text style={styles.backText}>{t("ortak.geriDon")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -391,10 +374,10 @@ export default function MemoryMatchScreen() {
           </Animated.Text>
 
           <Text style={styles.resultTitle}>
-            {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
+            {stars === 3 ? t("oyun.mukemmel") : t("oyun.bolumTamam")}
           </Text>
           <Text style={styles.resultSub}>
-            Hafıza Eşleştirme · {ayar!.etiket}
+            {t("oyunlar.memory.ad")} · {zorlukAdi}
           </Text>
 
           <Animated.View
@@ -413,18 +396,18 @@ export default function MemoryMatchScreen() {
 
           <View style={styles.statsBox}>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Kullanılan Hamle</Text>
+              <Text style={styles.statLabel}>{t("oyun.kullanilanHamle")}</Text>
               <Text style={styles.statValue}>{moves}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Eşleştirilen Çift</Text>
+              <Text style={styles.statLabel}>{t("oyun.eslestirilenCift")}</Text>
               <Text style={styles.statValue}>
                 {toplamCift} / {toplamCift}
               </Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Zorluk</Text>
-              <Text style={styles.statValue}>{ayar!.etiket}</Text>
+              <Text style={styles.statLabel}>{t("ortak.zorluk")}</Text>
+              <Text style={styles.statValue}>{zorlukAdi}</Text>
             </View>
           </View>
 
@@ -432,25 +415,33 @@ export default function MemoryMatchScreen() {
             style={styles.xpBox}
             entering={FadeInDown.delay(300).duration(400)}
           >
-            <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
+            <Text style={styles.xpText}>
+              {t("oyun.xpKazandin", { xp: earnedXP })}
+            </Text>
           </Animated.View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={yenidenOyna}>
-            <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
+            <Text style={styles.btnPrimaryText}>
+              {t("ortak.yenidenOynaBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={zorlukDegistir}
           >
-            <Text style={styles.btnSecondaryText}>ZORLUK DEĞİŞTİR</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.zorlukDegistirBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={() => router.replace("/(drawer)/(tabs)")}
           >
-            <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.anaMenuBuyuk")}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -462,15 +453,15 @@ export default function MemoryMatchScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerLabel}>HAMLE</Text>
+          <Text style={styles.headerLabel}>{t("oyun.hamle")}</Text>
           <Text style={styles.headerValue}>{moves}</Text>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.gameTitle}>HAFIZA EŞLEŞTİRME</Text>
-          <Text style={styles.gameSub}>{ayar!.etiket}</Text>
+          <Text style={styles.gameTitle}>{t("skorTablosu.sekme.memory")}</Text>
+          <Text style={styles.gameSub}>{zorlukAdi}</Text>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.headerLabel}>EŞLEŞME</Text>
+          <Text style={styles.headerLabel}>{t("oyun.eslesme")}</Text>
           <Text style={[styles.headerValue, { color: "#EC4899" }]}>
             {matched}/{toplamCift}
           </Text>
@@ -488,7 +479,9 @@ export default function MemoryMatchScreen() {
 
       {previewing && (
         <Text style={styles.previewText}>
-          {previewing && countdown > 0 ? `Kartları ezberle! ${countdown}` : " "}
+          {previewing && countdown > 0
+            ? t("oyun.kartlariEzberle", { sayi: countdown })
+            : " "}
         </Text>
       )}
 
@@ -533,11 +526,8 @@ export default function MemoryMatchScreen() {
         })}
       </View>
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => setZorluk(null)}
-      >
-        <Text style={styles.backText}>Zorluk Değiştir</Text>
+      <TouchableOpacity style={styles.backButton} onPress={zorlukDegistir}>
+        <Text style={styles.backText}>{t("ortak.zorlukDegistir")}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

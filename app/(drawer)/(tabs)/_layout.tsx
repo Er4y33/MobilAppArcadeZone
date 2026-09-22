@@ -2,12 +2,14 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { DrawerActions } from "@react-navigation/native";
 import { router, Tabs, useNavigation, usePathname } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { TouchableOpacity, View } from "react-native";
 import { useTheme } from "../../../context/ThemeContext";
 
 export default function TabLayout() {
   const { colors } = useTheme();
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   // Sol: hamburger — drawer'ı açar
   const HeaderSol = () => (
@@ -56,7 +58,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Ana Menü",
+          title: t("sekmeler.anaMenu"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -65,7 +67,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="games"
         options={{
-          title: "Oyunlar",
+          title: t("sekmeler.oyunlar"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="game-controller" size={size} color={color} />
           ),
@@ -74,7 +76,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="tasks"
         options={{
-          title: "Görevler",
+          title: t("sekmeler.gorevler"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkbox" size={size} color={color} />
           ),
@@ -83,7 +85,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="store"
         options={{
-          title: "Mağaza",
+          title: t("sekmeler.magaza"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cart" size={size} color={color} />
           ),
@@ -92,7 +94,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="leaderboard"
         options={{
-          title: "Skor",
+          title: t("sekmeler.skor"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trophy" size={size} color={color} />
           ),
@@ -100,8 +102,14 @@ export default function TabLayout() {
       />
 
       {/* Tab bar'da gizli — drawer'dan veya header'dan açılır */}
-      <Tabs.Screen name="profile" options={{ title: "Profil", href: null }} />
-      <Tabs.Screen name="settings" options={{ title: "Ayarlar", href: null }} />
+      <Tabs.Screen
+        name="profile"
+        options={{ title: t("sekmeler.profil"), href: null }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{ title: t("sekmeler.ayarlar"), href: null }}
+      />
       <Tabs.Screen name="backend" options={{ href: null }} />
     </Tabs>
   );

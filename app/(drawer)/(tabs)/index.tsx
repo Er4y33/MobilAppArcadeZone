@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ScrollView,
   StyleSheet,
@@ -16,7 +17,7 @@ import { useTheme } from "../../../context/ThemeContext";
 
 type Kisayol = {
   ikon: keyof typeof Ionicons.glyphMap;
-  etiket: string;
+  anahtar: string; // locales/*.json → sekmeler.*
   yol: string;
   renkAnahtari: "success" | "primaryAlt" | "accent";
 };
@@ -24,30 +25,34 @@ type Kisayol = {
 const KISAYOLLAR: Kisayol[] = [
   {
     ikon: "checkbox",
-    etiket: "Görevler",
+    anahtar: "sekmeler.gorevler",
     yol: "/(drawer)/(tabs)/tasks",
     renkAnahtari: "success",
   },
   {
     ikon: "cart",
-    etiket: "Mağaza",
+    anahtar: "sekmeler.magaza",
     yol: "/(drawer)/(tabs)/store",
     renkAnahtari: "primaryAlt",
   },
   {
     ikon: "trophy",
-    etiket: "Skor",
+    anahtar: "sekmeler.skor",
     yol: "/(drawer)/(tabs)/leaderboard",
     renkAnahtari: "accent",
   },
 ];
 
+const OYUN_SAYISI = 5;
+
 export default function HomeScreen() {
   const { user, profile } = useAuth();
   const { colors } = useTheme();
   const { cal } = useSound();
+  const { t } = useTranslation();
 
-  const username = profile?.username || user?.email?.split("@")[0] || "Oyuncu";
+  const username =
+    profile?.username || user?.email?.split("@")[0] || t("ortak.oyuncu");
   const level = profile?.level ?? 1;
   const coins = profile?.coins ?? 0;
   const xp = profile?.xp ?? 0;
@@ -88,7 +93,7 @@ export default function HomeScreen() {
                 {username}
               </Text>
               <Text style={[styles.detay, { color: colors.textMuted }]}>
-                Seviye {level} · {xp} XP
+                {t("ortak.seviye")} {level} · {xp} {t("ortak.xp")}
               </Text>
             </View>
 
@@ -97,7 +102,7 @@ export default function HomeScreen() {
             >
               <Text style={styles.coinSayi}>{coins}</Text>
               <Text style={[styles.coinEtiket, { color: colors.textMuted }]}>
-                coin
+                {t("ortak.coin")}
               </Text>
             </View>
           </TouchableOpacity>
@@ -111,8 +116,10 @@ export default function HomeScreen() {
             activeOpacity={0.9}
           >
             <Ionicons name="game-controller" size={46} color="#FFFFFF" />
-            <Text style={styles.oynaMetin}>OYNA</Text>
-            <Text style={styles.oynaAlt}>5 mini oyun seni bekliyor</Text>
+            <Text style={styles.oynaMetin}>{t("anaMenu.oyna")}</Text>
+            <Text style={styles.oynaAlt}>
+              {t("anaMenu.oynaAlt", { sayi: OYUN_SAYISI })}
+            </Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -135,7 +142,7 @@ export default function HomeScreen() {
                   color={colors[k.renkAnahtari]}
                 />
                 <Text style={[styles.kisayolMetin, { color: colors.text }]}>
-                  {k.etiket}
+                  {t(k.anahtar)}
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -213,6 +220,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     marginTop: 4,
+    textAlign: "center",
+    paddingHorizontal: 16,
   },
 
   kisayolSatiri: { flexDirection: "row", gap: 12 },

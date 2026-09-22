@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ScrollView,
   StyleSheet,
@@ -11,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../../context/AuthContext";
 import { GameKey, useScores } from "../../../context/ScoreContext";
 import { useTheme } from "../../../context/ThemeContext";
+import { unvanMetni } from "../../../lib/magazaUrun";
 import { supabase } from "../../../lib/supabase";
 
 type PlayerStats = {
@@ -22,25 +24,23 @@ type PlayerStats = {
   total_score: number;
 };
 
-// Grafiklerde kullanılacak oyun listesi
-const GAME_META: { key: GameKey; label: string; emoji: string }[] = [
-  { key: "reaction", label: "Tepki", emoji: "⚡" },
-  { key: "memory", label: "Hafıza", emoji: "🧠" },
-  { key: "sonsaniye", label: "Son Saniye", emoji: "⏱" },
-  { key: "mathrush", label: "Sayı Avı", emoji: "🔢" },
-  { key: "pattern", label: "Sırayı Takip", emoji: "🎨" },
+// Grafiklerde kullanılacak oyun listesi — adlar locales/*.json'dan gelir
+const GAME_META: { key: GameKey; emoji: string; birim: string }[] = [
+  { key: "reaction", emoji: "⚡", birim: "ms" },
+  { key: "memory", emoji: "🧠", birim: "hamle" },
+  { key: "sonsaniye", emoji: "⏱", birim: "puan" },
+  { key: "mathrush", emoji: "🔢", birim: "puan" },
+  { key: "pattern", emoji: "🎨", birim: "seviye" },
 ];
 
-const DAY_LABELS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
-
 // Seviyeye göre en iyi rozet belirle
-function getBadgeLabel(level: number): string {
-  if (level >= 15) return "🏆 EFSANEVİ";
-  if (level >= 10) return "💎 ELMAS";
-  if (level >= 7) return "⚡ TEPKI USTASI";
-  if (level >= 5) return "🧠 HAFİZA UZMANI";
-  if (level >= 3) return "🌟 YÜKSELİYOR";
-  return "🎮 YENİ OYUNCU";
+function getBadgeKey(level: number): string {
+  if (level >= 15) return "efsanevi";
+  if (level >= 10) return "elmas";
+  if (level >= 7) return "tepkiUstasi";
+  if (level >= 5) return "hafizaUzmani";
+  if (level >= 3) return "yukseliyor";
+  return "yeniOyuncu";
 }
 
 // Seviye eğrisi: 1→2 = 100 XP, sonra her seviye +50
@@ -61,6 +61,7 @@ export default function ProfileScreen() {
   const { scores, getBestScore } = useScores();
   const { user, profile } = useAuth();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const [stats, setStats] = useState<PlayerStats>({
     username: "",
@@ -73,9 +74,12 @@ export default function ProfileScreen() {
   const [equippedFrameColor, setEquippedFrameColor] = useState<string | null>(
     null,
   );
-  const [equippedBadgeText, setEquippedBadgeText] = useState<string | null>(
-    null,
-  );
+  // Unvanı ham haliyle tutuyoruz; metni render sırasında çeviriyoruz,
+  // böylece dil değişince anında güncelleniyor.
+  const [equippedBadge, setEquippedBadge] = useState<{
+    id: string;
+    value: string | null;
+  } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -114,7 +118,7 @@ export default function ProfileScreen() {
 
     if (ids.length === 0) {
       setEquippedFrameColor(null);
-      setEquippedBadgeText(null);
+      setEquippedBadge(null);
       return;
     }
 
@@ -126,7 +130,9 @@ export default function ProfileScreen() {
         const frame = data?.find((i: any) => i.category === "frame");
         const badge = data?.find((i: any) => i.category === "badge");
         setEquippedFrameColor(frame?.value ?? null);
-        setEquippedBadgeText(badge?.value ?? null);
+        setEquippedBadge(
+          badge ? { id: badge.id, value: badge.value ?? null } : null,
+        );
       });
   }, [profile?.equipped_frame, profile?.equipped_badge]);
 
@@ -134,11 +140,12 @@ export default function ProfileScreen() {
   const gameDistribution = useMemo(() => {
     const counts = GAME_META.map((g) => ({
       ...g,
+      label: t(`oyunlar.${g.key}.kisa`),
       count: scores.filter((s) => s.game === g.key).length,
     }));
     const max = Math.max(...counts.map((c) => c.count), 1);
     return counts.map((c) => ({ ...c, ratio: c.count / max }));
-  }, [scores]);
+  }, [scores, t]);
 
   const favoriteGame = useMemo(() => {
     const sorted = [...gameDistribution].sort((a, b) => b.count - a.count);
@@ -162,29 +169,31 @@ export default function ProfileScreen() {
         return played >= day && played < dayEnd;
       }).length;
 
-      // getDay: 0=Pazar → DAY_LABELS Pazartesi'den başlıyor
-      const dayIndex = day.getDay() === 0 ? 6 : day.getDay() - 1;
+      // getDay: 0=Pazar → gunler.1 Pazartesi'den başlıyor
+      const dayIndex = day.getDay() === 0 ? 7 : day.getDay();
 
       days.push({
-        label: DAY_LABELS[dayIndex],
+        label: t(`gunler.${dayIndex}`),
         count,
         isToday: i === 0,
       });
     }
     return days;
-  }, [scores]);
+  }, [scores, t]);
 
   const maxDayCount = Math.max(...weeklyActivity.map((d) => d.count), 1);
   const weekTotal = weeklyActivity.reduce((sum, d) => sum + d.count, 0);
 
-  const reactionBest = getBestScore("reaction");
-  const memoryBest = getBestScore("memory");
-  const sonsaniyeBest = getBestScore("sonsaniye");
-  const mathrushBest = getBestScore("mathrush");
-  const patternBest = getBestScore("pattern");
+  const bestByGame: Record<GameKey, number | null> = {
+    reaction: getBestScore("reaction")?.score ?? null,
+    memory: getBestScore("memory")?.score ?? null,
+    sonsaniye: getBestScore("sonsaniye")?.score ?? null,
+    mathrush: getBestScore("mathrush")?.score ?? null,
+    pattern: getBestScore("pattern")?.score ?? null,
+  };
 
   const { xpInLevel, xpNeeded, ratio: xpProgress } = getLevelProgress(stats.xp);
-  const badge = getBadgeLabel(stats.level);
+  const badge = t(`rozet.${getBadgeKey(stats.level)}`);
   const initial = stats.username ? stats.username.charAt(0).toUpperCase() : "?";
 
   return (
@@ -207,20 +216,20 @@ export default function ProfileScreen() {
           </View>
 
           <Text style={[styles.username, { color: colors.text }]}>
-            {stats.username || "Oyuncu"}
+            {stats.username || t("ortak.oyuncu")}
           </Text>
           <Text style={[styles.levelText, { color: colors.primary }]}>
-            SEVİYE {stats.level}
+            {t("profil.seviyeBuyuk", { n: stats.level })}
           </Text>
 
-          {equippedBadgeText && (
+          {equippedBadge && (
             <View
               style={[styles.equippedBadge, { borderColor: colors.accent }]}
             >
               <Text
                 style={[styles.equippedBadgeText, { color: colors.accent }]}
               >
-                {equippedBadgeText}
+                {unvanMetni(equippedBadge.id, equippedBadge.value)}
               </Text>
             </View>
           )}
@@ -248,7 +257,7 @@ export default function ProfileScreen() {
               {stats.total_score.toLocaleString()}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>
-              Toplam Skor
+              {t("profil.toplamSkor")}
             </Text>
           </View>
 
@@ -257,7 +266,7 @@ export default function ProfileScreen() {
               {stats.total_plays}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>
-              Oynanan Oyun
+              {t("profil.oynananOyun")}
             </Text>
           </View>
         </View>
@@ -270,7 +279,7 @@ export default function ProfileScreen() {
           ]}
         >
           <Text style={[styles.badgeLabel, { color: colors.textMuted }]}>
-            EN İYİ ROZET
+            {t("profil.enIyiRozet")}
           </Text>
           <Text style={[styles.badgeValue, { color: colors.primary }]}>
             {badge}
@@ -280,17 +289,18 @@ export default function ProfileScreen() {
         {/* ── GRAFİK 1: Oyun Dağılımı ──────────────────────────── */}
         <View style={[styles.chartCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Oyun Dağılımı
+            {t("profil.oyunDagilimi")}
           </Text>
           {favoriteGame && (
             <Text style={[styles.chartSub, { color: colors.textMuted }]}>
-              En çok oynadığın: {favoriteGame.emoji} {favoriteGame.label}
+              {t("profil.enCokOynadigin")} {favoriteGame.emoji}{" "}
+              {favoriteGame.label}
             </Text>
           )}
 
           {stats.total_plays === 0 ? (
             <Text style={[styles.emptyChart, { color: colors.textMuted }]}>
-              Henüz oyun oynamadın
+              {t("profil.henuzOynamadin")}
             </Text>
           ) : (
             gameDistribution.map((g) => (
@@ -322,10 +332,10 @@ export default function ProfileScreen() {
         {/* ── GRAFİK 2: Son 7 Gün ──────────────────────────────── */}
         <View style={[styles.chartCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Son 7 Günlük Aktivite
+            {t("profil.son7Gun")}
           </Text>
           <Text style={[styles.chartSub, { color: colors.textMuted }]}>
-            Bu hafta toplam {weekTotal} oyun
+            {t("profil.buHaftaToplam", { sayi: weekTotal })}
           </Text>
 
           <View style={styles.vBarWrap}>
@@ -371,53 +381,21 @@ export default function ProfileScreen() {
           style={[styles.bestScoresCard, { backgroundColor: colors.surface }]}
         >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            En İyi Skorlar
+            {t("profil.enIyiSkorlar")}
           </Text>
 
-          <View style={styles.scoreRow}>
-            <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
-              ⚡ Reaction
-            </Text>
-            <Text style={[styles.scoreVal, { color: colors.success }]}>
-              {reactionBest ? `${reactionBest.score} ms` : "-"}
-            </Text>
-          </View>
-
-          <View style={styles.scoreRow}>
-            <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
-              🧠 Memory
-            </Text>
-            <Text style={[styles.scoreVal, { color: colors.success }]}>
-              {memoryBest ? `${memoryBest.score} moves` : "-"}
-            </Text>
-          </View>
-
-          <View style={styles.scoreRow}>
-            <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
-              ⏱ Son Saniye
-            </Text>
-            <Text style={[styles.scoreVal, { color: colors.success }]}>
-              {sonsaniyeBest ? `${sonsaniyeBest.score} pts` : "-"}
-            </Text>
-          </View>
-
-          <View style={styles.scoreRow}>
-            <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
-              🔢 Sayı Avı
-            </Text>
-            <Text style={[styles.scoreVal, { color: colors.success }]}>
-              {mathrushBest ? `${mathrushBest.score} pts` : "-"}
-            </Text>
-          </View>
-
-          <View style={styles.scoreRow}>
-            <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
-              🎨 Sırayı Takip Et
-            </Text>
-            <Text style={[styles.scoreVal, { color: colors.success }]}>
-              {patternBest ? `${patternBest.score} lvl` : "-"}
-            </Text>
-          </View>
+          {GAME_META.map((g) => (
+            <View key={g.key} style={styles.scoreRow}>
+              <Text style={[styles.scoreGame, { color: colors.textMuted }]}>
+                {g.emoji} {t(`oyunlar.${g.key}.kisa`)}
+              </Text>
+              <Text style={[styles.scoreVal, { color: colors.success }]}>
+                {bestByGame[g.key] !== null
+                  ? `${bestByGame[g.key]} ${t(`birim.${g.birim}`)}`
+                  : "-"}
+              </Text>
+            </View>
+          ))}
         </View>
 
         {/* Ana Menü */}
@@ -429,7 +407,7 @@ export default function ProfileScreen() {
           onPress={() => router.push("/(drawer)/(tabs)")}
         >
           <Text style={[styles.menuBtnText, { color: colors.text }]}>
-            ANA MENÜ
+            {t("ortak.anaMenuBuyuk")}
           </Text>
         </TouchableOpacity>
 

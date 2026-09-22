@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   FlatList,
@@ -14,26 +15,13 @@ import { useTheme } from "../context/ThemeContext";
 
 const { width } = Dimensions.get("window");
 
-const SLIDES = [
-  {
-    id: "1",
-    emoji: "🎮",
-    title: "ArcadeZone'a Hosgeldin!",
-    desc: "5 farklı oyun, tek rekabet. Zirveye tırmanmaya hazır mısın?",
-  },
-  {
-    id: "2",
-    emoji: "⚡🧠⏱ + >>",
-    title: "5 Farklı Oyun",
-    desc: "Tepkini ölç, hafızanı zorla ve kelime bulmacalarını çöz. Her oyun farklı bir beceri ölçer.",
-  },
-  {
-    id: "3",
-    emoji: "🏆",
-    title: "Tek Rekabet",
-    desc: "Skorunu kaydet, lider tablosuna gir. En iyisi sen ol!",
-  },
-];
+// Metinler locales/*.json içinde: onboarding.s1baslik, onboarding.s1aciklama ...
+const SLIDE_IDS = ["s1", "s2", "s3"] as const;
+const SLIDE_EMOJIS: Record<(typeof SLIDE_IDS)[number], string> = {
+  s1: "🎮",
+  s2: "⚡🧠⏱",
+  s3: "🏆",
+};
 
 const ONBOARDING_KEY = "arcadezone:onboarding_done";
 
@@ -48,11 +36,24 @@ export async function isOnboardingDone(): Promise<boolean> {
 
 export default function OnboardingScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [current, setCurrent] = useState(0);
   const flatRef = useRef<FlatList>(null);
 
+  // Dil değişirse metinler de yenilensin
+  const slides = useMemo(
+    () =>
+      SLIDE_IDS.map((id) => ({
+        id,
+        emoji: SLIDE_EMOJIS[id],
+        title: t(`onboarding.${id}baslik`),
+        desc: t(`onboarding.${id}aciklama`),
+      })),
+    [t],
+  );
+
   const goNext = async () => {
-    if (current < SLIDES.length - 1) {
+    if (current < slides.length - 1) {
       flatRef.current?.scrollToIndex({ index: current + 1 });
       setCurrent(current + 1);
     } else {
@@ -67,7 +68,7 @@ export default function OnboardingScreen() {
     >
       <FlatList
         ref={flatRef}
-        data={SLIDES}
+        data={slides}
         horizontal
         pagingEnabled
         scrollEnabled={false}
@@ -88,7 +89,7 @@ export default function OnboardingScreen() {
 
       {/* Dots */}
       <View style={styles.dots}>
-        {SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <View
             key={i}
             style={[
@@ -108,7 +109,7 @@ export default function OnboardingScreen() {
         onPress={goNext}
       >
         <Text style={styles.btnText}>
-          {current === SLIDES.length - 1 ? "BASLA" : "ILERI"}
+          {current === slides.length - 1 ? t("ortak.basla") : t("ortak.ileri")}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

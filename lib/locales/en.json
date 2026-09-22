@@ -14,7 +14,18 @@
     "coin": "coins",
     "seviye": "Level",
     "xp": "XP",
-    "puan": "Points"
+    "puan": "Points",
+    "ileri": "NEXT",
+    "basla": "START",
+    "anaMenuBuyuk": "HOME",
+    "oyuncu": "Player",
+    "geriDonBuyuk": "GO BACK",
+    "yenidenOynaBuyuk": "PLAY AGAIN",
+    "zorlukDegistirBuyuk": "CHANGE DIFFICULTY",
+    "modDegistirBuyuk": "CHANGE MODE",
+    "saniyeKisa": "s",
+    "zorluk": "Difficulty",
+    "hata": "Error"
   },
   "sekmeler": {
     "anaMenu": "Home",
@@ -35,23 +46,33 @@
     "altBaslik": "{{sayi}} games · Earn XP as you play",
     "reaction": {
       "ad": "Reaction Test",
-      "aciklama": "Wait for green, then tap instantly. Measure your reflexes."
+      "aciklama": "Wait for green, then tap instantly. Measure your reflexes.",
+      "kisa": "Reaction",
+      "nasil": "Tap the moment the screen turns green. The faster you are, the better your score — tapping too early cancels the round."
     },
     "memory": {
       "ad": "Memory Match",
-      "aciklama": "Memorise the cards and find every pair in as few moves as you can."
+      "aciklama": "Memorise the cards and find every pair in as few moves as you can.",
+      "kisa": "Memory",
+      "nasil": "The cards stay face up for 3 seconds, so memorise their positions. Then find the pairs — fewer moves means a better score."
     },
     "sonsaniye": {
       "ad": "Last Second",
-      "aciklama": "Unscramble the letters into a word and buy yourself more time."
+      "aciklama": "Unscramble the letters into a word and buy yourself more time.",
+      "kisa": "Last Second",
+      "nasil": "Unscramble the letters to find the word! Every correct answer earns points and extra time. Two modes: tap the letters or type on the keyboard."
     },
     "mathrush": {
       "ad": "Number Hunt",
-      "aciklama": "10 questions, clock running. The fastest wins."
+      "aciklama": "10 questions, clock running. The fastest wins.",
+      "kisa": "Numbers",
+      "nasil": "Solve the equation on screen and pick the right answer before time runs out! Quick answers earn bonus points."
     },
     "pattern": {
       "ad": "Follow the Sequence",
-      "aciklama": "Watch the colour sequence, then repeat it in the same order."
+      "aciklama": "Watch the colour sequence, then repeat it in the same order.",
+      "kisa": "Sequence",
+      "nasil": "Watch the flashing colour sequence, then tap it back in the same order. Every correct round makes the sequence one step longer!"
     }
   },
   "zorluk": {
@@ -85,7 +106,13 @@
     "dogruCevap": "Correct Answers",
     "toplamPuan": "Total Points",
     "ulasilanSeviye": "Level Reached",
-    "tamamlananTur": "Rounds Completed"
+    "tamamlananTur": "Rounds Completed",
+    "detay": "Game Details",
+    "puan": "POINTS",
+    "nasilOynanir": "HOW TO PLAY",
+    "enIyiSkorun": "YOUR BEST SCORE",
+    "henuzOynamadin": "Not played yet",
+    "oyna": "PLAY"
   },
   "skorTablosu": {
     "baslik": "Ranks",
@@ -94,7 +121,14 @@
     "ilkSenOlZorluk": "Be the first to play on this difficulty!",
     "kezOynadi": "played {{sayi}} times",
     "seninSiran": "Your Rank:",
-    "sen": "You"
+    "sen": "You",
+    "sekme": {
+      "reaction": "REACTION",
+      "memory": "MEMORY",
+      "sonsaniye": "LAST SECOND",
+      "mathrush": "NUMBERS",
+      "pattern": "SEQUENCE"
+    }
   },
   "ayarlar": {
     "baslik": "Settings",
@@ -117,14 +151,88 @@
     "oynananOyun": "Games Played",
     "enIyiRozet": "TOP BADGE",
     "oyunDagilimi": "Game Breakdown",
-    "enCokOynadigin": "Most played:"
+    "enCokOynadigin": "Most played:",
+    "seviyeBuyuk": "LEVEL {{n}}",
+    "enIyiSkorlar": "Best Scores",
+    "henuzOynamadin": "You haven't played yet",
+    "son7Gun": "Last 7 Days",
+    "buHaftaToplam": "{{sayi}} games this week"
   },
   "gorevler": {
     "baslik": "Quests",
     "tamamlanan": "COMPLETED",
     "coinAlindi": "{{alinan}} / {{toplam}} coins claimed",
     "yenilendi": "Quests refreshed on {{tarih}}",
-    "kalanGun": "{{gun}} days until new quests"
+    "kalanGun": "{{gun}} days until new quests",
+    "tamamlandi": "Completed!",
+    "enIyi": "Best: {{sayi}}",
+    "odulAl": "🪙 CLAIM {{sayi}}",
+    "odulAlindiBtn": "✓ CLAIMED",
+    "odulAlinamadi": "Reward could not be claimed",
+    "odulAlindiBaslik": "Reward claimed!",
+    "coinEklendi": "🪙 {{sayi}} coins added to your account.",
+    "liste": {
+      "reaction_play_5": {
+        "baslik": "Warm-Up Round",
+        "aciklama": "Play Reaction Test 5 times"
+      },
+      "reaction_under_200": {
+        "baslik": "Lightning Reflex",
+        "aciklama": "Go below 200 ms in Reaction Test"
+      },
+      "reaction_under_120": {
+        "baslik": "Thunder Speed",
+        "aciklama": "Go below 120 ms in Reaction Test"
+      },
+      "memory_play_5": {
+        "baslik": "Card Fanatic",
+        "aciklama": "Play Memory Match 5 times"
+      },
+      "memory_under_14": {
+        "baslik": "Sharp Memory",
+        "aciklama": "Finish Memory Match in under 14 moves"
+      },
+      "memory_under_12": {
+        "baslik": "Photographic Memory",
+        "aciklama": "Finish Memory Match in under 12 moves"
+      },
+      "sonsaniye_play_3": {
+        "baslik": "Word Hunter",
+        "aciklama": "Play Last Second 3 times"
+      },
+      "sonsaniye_over_200": {
+        "baslik": "Rich Vocabulary",
+        "aciklama": "Pass 200 points in Last Second"
+      },
+      "sonsaniye_over_400": {
+        "baslik": "Word Master",
+        "aciklama": "Pass 400 points in Last Second"
+      },
+      "mathrush_play_3": {
+        "baslik": "Maths Lover",
+        "aciklama": "Play Number Hunt 3 times"
+      },
+      "mathrush_over_150": {
+        "baslik": "Calculator",
+        "aciklama": "Pass 150 points in Number Hunt"
+      },
+      "mathrush_over_220": {
+        "baslik": "Number Genius",
+        "aciklama": "Pass 220 points in Number Hunt"
+      },
+      "pattern_play_3": {
+        "baslik": "Sequence Follower",
+        "aciklama": "Play Follow the Sequence 3 times"
+      },
+      "pattern_reach_8": {
+        "baslik": "Sequence Hunter",
+        "aciklama": "Reach level 8 in Follow the Sequence"
+      },
+      "pattern_reach_12": {
+        "baslik": "Sequence Legend",
+        "aciklama": "Reach level 12 in Follow the Sequence"
+      }
+    }
   },
   "magaza": {
     "baslik": "Shop",
@@ -133,7 +241,65 @@
     "unvanlar": "TITLES",
     "kusan": "EQUIP",
     "satinAl": "BUY",
-    "kusanildi": "EQUIPPED"
+    "kusanildi": "EQUIPPED",
+    "satinAlBaslik": "Buy",
+    "satinAlSoru": "Buy \"{{ad}}\" for {{fiyat}} coins?",
+    "satinAlinamadi": "Purchase failed",
+    "tebrikler": "Congratulations!",
+    "artikSenin": "\"{{ad}}\" is yours now.",
+    "islemBasarisiz": "Action failed",
+    "kusanildiKaldir": "EQUIPPED — REMOVE",
+    "yetersiz": "🪙 {{fiyat}} — NOT ENOUGH",
+    "satinAlBtn": "🪙 {{fiyat}} — BUY",
+    "urun": {
+      "frame_bronze": {
+        "ad": "Bronze Frame",
+        "aciklama": "Classic bronze avatar frame"
+      },
+      "frame_silver": {
+        "ad": "Silver Frame",
+        "aciklama": "Shiny silver avatar frame"
+      },
+      "frame_gold": {
+        "ad": "Gold Frame",
+        "aciklama": "Majestic golden avatar frame"
+      },
+      "frame_neon": {
+        "ad": "Neon Frame",
+        "aciklama": "Frame with a purple neon glow"
+      },
+      "frame_emerald": {
+        "ad": "Emerald Frame",
+        "aciklama": "Frame in emerald green tones"
+      },
+      "badge_rookie": {
+        "ad": "Rookie",
+        "aciklama": "The start of your journey"
+      },
+      "badge_speed": {
+        "ad": "Speed Freak",
+        "aciklama": "A title for reflex masters"
+      },
+      "badge_brain": {
+        "ad": "Brain Squad",
+        "aciklama": "The title of memory champions"
+      },
+      "badge_word": {
+        "ad": "Word Explorer",
+        "aciklama": "A title for word hunters"
+      },
+      "badge_legend": {
+        "ad": "Legend",
+        "aciklama": "Only the very best carry it"
+      }
+    },
+    "unvan": {
+      "badge_rookie": "🌱 ROOKIE",
+      "badge_speed": "⚡ SPEED FREAK",
+      "badge_brain": "🧠 BRAIN SQUAD",
+      "badge_word": "📖 WORD EXPLORER",
+      "badge_legend": "👑 LEGEND"
+    }
   },
   "hakkinda": {
     "baslik": "About",
@@ -142,6 +308,161 @@
     "ozelTesekkurler": "SPECIAL THANKS",
     "tesekkurMetni": "To every ArcadeZone player!",
     "gizlilikPolitikasi": "Privacy Policy",
-    "tanitim": "ArcadeZone is a collection of five mini games that sharpen your reflexes, memory, vocabulary and mental maths. It started as a school project and grew into a published app."
+    "tanitim": "ArcadeZone is a collection of five mini games that sharpen your reflexes, memory, vocabulary and mental maths. It started as a school project and grew into a published app.",
+    "erayRol": "Development & Backend",
+    "erayDetay": "Game mechanics, difficulty system, database architecture, score and reward infrastructure, sound system, release process",
+    "melihRol": "Interface Design",
+    "melihDetay": "First-release interface design and visual direction"
+  },
+  "onboarding": {
+    "s1baslik": "Welcome to ArcadeZone!",
+    "s1aciklama": "Five games, one leaderboard. Ready to climb to the top?",
+    "s2baslik": "Five Different Games",
+    "s2aciklama": "Test your reflexes, stretch your memory and crack word puzzles. Each game measures a different skill.",
+    "s3baslik": "One Competition",
+    "s3aciklama": "Save your score and enter the leaderboard. Be the best!"
+  },
+  "birim": {
+    "ms": "ms",
+    "hamle": "moves",
+    "puan": "pts",
+    "seviye": "lvl"
+  },
+  "gunler": {
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat",
+    "7": "Sun"
+  },
+  "rozet": {
+    "efsanevi": "🏆 LEGENDARY",
+    "elmas": "💎 DIAMOND",
+    "tepkiUstasi": "⚡ REFLEX MASTER",
+    "hafizaUzmani": "🧠 MEMORY EXPERT",
+    "yukseliyor": "🌟 RISING",
+    "yeniOyuncu": "🎮 NEWCOMER"
+  },
+  "aylar": {
+    "1": "January",
+    "2": "February",
+    "3": "March",
+    "4": "April",
+    "5": "May",
+    "6": "June",
+    "7": "July",
+    "8": "August",
+    "9": "September",
+    "10": "October",
+    "11": "November",
+    "12": "December"
+  },
+  "oyunAyar": {
+    "memory": {
+      "kolay": "12 cards · 3x4",
+      "orta": "16 cards · 4x4",
+      "zor": "24 cards · 4x6"
+    },
+    "pattern": {
+      "kolay": "4 colours · 2x2",
+      "orta": "6 colours · 2x3",
+      "zor": "9 colours · 3x3"
+    },
+    "mathrush": {
+      "kolay": "Addition · Subtraction",
+      "orta": "+ − × ÷",
+      "zor": "+ − × ÷ √ x²"
+    }
+  },
+  "tema": {
+    "baslik": "Theme",
+    "meyve": "Fruit",
+    "hayvan": "Animal",
+    "nesne": "Object",
+    "renk": "Colour"
+  },
+  "tepki": {
+    "baslik": "REACTION TEST",
+    "hazirOl": "Get ready...",
+    "dokun": "TAP!",
+    "cokErken": "Too early!",
+    "yesileDonunce": "Tap when it turns green",
+    "simdi": "NOW!",
+    "tekrarDene": "Tap to try again",
+    "inanilmaz": "Incredible speed! ⚡",
+    "cokHizli": "Very fast! 🔥",
+    "iyiTepki": "Good reflex 👍",
+    "yavas": "A bit slow, try again",
+    "enIyi": "BEST",
+    "enIyiRozet": "BEST: {{ms}} ms",
+    "skor": "SCORE",
+    "yeniRekor": "🎉 NEW RECORD!"
+  },
+  "sonSaniye": {
+    "dokunmaliAlt": "Tap the letters in order · No keyboard",
+    "yazmaliAlt": "Type the word · Classic",
+    "dokunmaliMod": "Tap Mode",
+    "yazmaliMod": "Type Mode",
+    "kelimeyiYaz": "Type the word...",
+    "pasBtn": "SKIP (-5)",
+    "toplamSkor": "TOTAL SCORE",
+    "sureBitti": "TIME'S UP!",
+    "seviyeSatir": "Level {{no}} — {{ad}}",
+    "ulasilanSeviyeSatir": "Level Reached: {{simdi}} / {{toplam}}",
+    "dogruFeedback": "CORRECT! +{{puan}} points, +5 seconds",
+    "seviyeFeedback": "✨ LEVEL {{seviye}}! +{{puan}} points",
+    "tumSeviyeler": "🎉 +{{puan}} points! All levels complete!",
+    "yanlisTekrar": "WRONG — Try Again",
+    "yanlisSaniye": "WRONG — {{saniye}} seconds",
+    "pasFeedback": "Skipped: {{kelime}} (-5 points)",
+    "seviyeAd": {
+      "1": "5 Letters",
+      "2": "6 Letters",
+      "3": "7 Letters",
+      "4": "8 Letters",
+      "5": "9+ Letters"
+    }
+  },
+  "giris": {
+    "baslik": "Sign In",
+    "altBaslik": "Sign in to your account and start playing!",
+    "eposta": "Email Address",
+    "epostaOrnek": "example@mail.com",
+    "sifre": "Password",
+    "btn": "ENTER THE ARCADE",
+    "sifremiUnuttum": "Forgot my password",
+    "hesabinYok": "Don't have an account? ",
+    "kayitOl": "Sign Up",
+    "zorunlu": "Email and password are required.",
+    "basarisiz": "Sign-In Failed"
+  },
+  "kayit": {
+    "baslik": "Create Account",
+    "altBaslik": "Join, play and climb the leaderboard!",
+    "kullaniciAdi": "Username",
+    "kullaniciAdiOrnek": "ArcadeKing",
+    "sifreOrnek": "At least 6 characters",
+    "btn": "CREATE ACCOUNT",
+    "zatenVar": "Already have an account? ",
+    "girisYap": "Sign In",
+    "tumAlanlar": "All fields are required.",
+    "sifreKisa": "Password must be at least 6 characters.",
+    "basarisiz": "Sign-Up Failed",
+    "basarili": "Account Created! 🎉",
+    "basariliMesaj": "Your account is ready. You can sign in now."
+  },
+  "sifreSifirla": {
+    "baslik": "Forgot Password",
+    "altBaslik": "Enter the email address on your account and we'll send you a reset link.",
+    "btn": "SEND LINK",
+    "btnGonderiliyor": "SENDING...",
+    "girisEkraninaDon": "Back to sign in",
+    "epostaGerekli": "Email required",
+    "epostaZorunlu": "Please enter your email address.",
+    "gonderilemedi": "Could not send",
+    "gonderildiBaslik": "Email sent",
+    "gonderildiMesaj": "A password reset link has been sent to your email address. Check your inbox."
   }
 }

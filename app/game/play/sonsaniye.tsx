@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   StyleSheet,
   Text,
@@ -13,10 +14,11 @@ import GeriSayim from "../../../components/GeriSayim";
 import { Difficulty, useScores } from "../../../context/ScoreContext";
 import { useSound } from "../../../context/SoundContext";
 import {
+  aktifHavuz,
   LEVELS,
   MAX_TIME,
-  WORDS_PER_LEVEL,
   shuffleLetters,
+  WORDS_PER_LEVEL,
 } from "../../../lib/data/sonsaniyeKelimeler";
 import {
   hapticError,
@@ -24,17 +26,28 @@ import {
   hapticSuccess,
   hapticWarning,
 } from "../../../lib/haptics";
+import { aktifDil } from "../../../lib/i18n";
 import { useGeriSayim } from "../../../lib/useGeriSayim";
 
-// Türkçe büyük/küçük harf yardımcıları
+// Büyük/küçük harf yardımcıları.
+// Türkçede i/İ ve ı/I özel; İngilizcede standart kurallar geçerli.
+const turkceMi = () => aktifDil() === "tr";
+
 const toLowerTR = (s: string) =>
-  s.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase();
+  turkceMi()
+    ? s.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase()
+    : s.toLowerCase();
 
 const toUpperTR = (ch: string) => {
-  if (ch === "i") return "İ";
-  if (ch === "ı") return "I";
+  if (turkceMi()) {
+    if (ch === "i") return "İ";
+    if (ch === "ı") return "I";
+  }
   return ch.toUpperCase();
 };
+
+const kelimeBuyuk = (kelime: string) =>
+  Array.from(kelime).map(toUpperTR).join("");
 
 type GamePhase = "playing" | "gameOver";
 type Mod = "yazmali" | "dokunmali";
@@ -51,6 +64,7 @@ const KILIT_SURESI = 500;
 export default function SonSaniyeScreen() {
   const { addScore } = useScores();
   const { cal } = useSound();
+  const { t } = useTranslation();
   const [mod, setMod] = useState<Mod | null>(null);
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
@@ -144,7 +158,7 @@ export default function SonSaniyeScreen() {
 
   // ─── KELİME YÜKLE ───────────────────────────────────────────
   const loadWord = (lvlIdx: number, used: string[]) => {
-    const pool = LEVELS[lvlIdx].pool;
+    const pool = aktifHavuz(lvlIdx);
     const available = pool.filter((w) => !used.includes(w));
     const candidates = available.length > 0 ? available : pool;
     const next = candidates[Math.floor(Math.random() * candidates.length)];
@@ -213,7 +227,7 @@ export default function SonSaniyeScreen() {
 
     if (newSolved >= WORDS_PER_LEVEL) {
       if (levelIndex >= LEVELS.length - 1) {
-        setFeedback(`🎉 +${pts} Puan! Tüm seviyeler tamam!`);
+        setFeedback(t("sonSaniye.tumSeviyeler", { puan: pts }));
         if (timerRef.current) clearInterval(timerRef.current); // bitiş beklerken süre akmasın
         sonra(() => endGame(true), 800);
       } else {
@@ -221,13 +235,18 @@ export default function SonSaniyeScreen() {
         setLevelIndex(nextIdx);
         setLevelSolved(0);
         setUsedInLevel([]);
-        setFeedback(`✨ SEVİYE ${nextIdx + 1}! +${pts} Puan`);
+        setFeedback(
+          t("sonSaniye.seviyeFeedback", {
+            seviye: nextIdx + 1,
+            puan: pts,
+          }),
+        );
         loadWord(nextIdx, []);
       }
     } else {
       setLevelSolved(newSolved);
       setUsedInLevel(newUsed);
-      setFeedback(`DOĞRU! +${pts} Puan, +5 Saniye`);
+      setFeedback(t("sonSaniye.dogruFeedback", { puan: pts }));
       loadWord(levelIndex, newUsed);
     }
   };
@@ -243,7 +262,7 @@ export default function SonSaniyeScreen() {
     } else {
       hapticError();
       cal("wrong");
-      setFeedback("YANLIŞ — Tekrar Dene");
+      setFeedback(t("sonSaniye.yanlisTekrar"));
       setInput("");
     }
   };
@@ -288,7 +307,7 @@ export default function SonSaniyeScreen() {
       setKilitli(true);
 
       setTimeLeft((t) => Math.max(1, t - CEZA_SANIYE));
-      setFeedback(`YANLIŞ — ${CEZA_SANIYE} saniye`);
+      setFeedback(t("sonSaniye.yanlisSaniye", { saniye: CEZA_SANIYE }));
 
       flashRef.current = setTimeout(() => {
         setYanlisIndex(null);
@@ -307,7 +326,9 @@ export default function SonSaniyeScreen() {
     setScore(newScore);
     const newUsed = [...usedInLevel, targetWord];
     setUsedInLevel(newUsed);
-    setFeedback(`Pas: ${targetWord.toUpperCase()} (-5 Puan)`);
+    setFeedback(
+      t("sonSaniye.pasFeedback", { kelime: kelimeBuyuk(targetWord) }),
+    );
     loadWord(levelIndex, newUsed);
   };
 
@@ -324,8 +345,10 @@ export default function SonSaniyeScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: "#0a0a0c" }]}>
         <View style={styles.secimBox}>
           <Text style={styles.secimEmoji}>⏱</Text>
-          <Text style={styles.secimBaslik}>SON SANİYE</Text>
-          <Text style={styles.secimAlt}>Mod seç</Text>
+          <Text style={styles.secimBaslik}>
+            {t("skorTablosu.sekme.sonsaniye")}
+          </Text>
+          <Text style={styles.secimAlt}>{t("zorluk.modSec")}</Text>
 
           <Animated.View
             style={{ width: "100%" }}
@@ -336,9 +359,9 @@ export default function SonSaniyeScreen() {
               onPress={() => startGame("dokunmali")}
               activeOpacity={0.85}
             >
-              <Text style={styles.modBtnText}>DOKUNMALI</Text>
+              <Text style={styles.modBtnText}>{t("zorluk.dokunmali")}</Text>
               <Text style={styles.modBtnSub}>
-                Harflere sırayla bas · Klavye yok
+                {t("sonSaniye.dokunmaliAlt")}
               </Text>
             </TouchableOpacity>
           </Animated.View>
@@ -352,10 +375,8 @@ export default function SonSaniyeScreen() {
               onPress={() => startGame("yazmali")}
               activeOpacity={0.85}
             >
-              <Text style={styles.modBtnText}>YAZMALI</Text>
-              <Text style={styles.modBtnSub}>
-                Kelimeyi klavyeyle yaz · Klasik
-              </Text>
+              <Text style={styles.modBtnText}>{t("zorluk.yazmali")}</Text>
+              <Text style={styles.modBtnSub}>{t("sonSaniye.yazmaliAlt")}</Text>
             </TouchableOpacity>
           </Animated.View>
 
@@ -363,7 +384,7 @@ export default function SonSaniyeScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>Geri Dön</Text>
+            <Text style={styles.backText}>{t("ortak.geriDon")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -383,17 +404,21 @@ export default function SonSaniyeScreen() {
           </Animated.Text>
 
           <Text style={styles.resultTitle}>
-            {isVictory ? "MÜKEMMEL!" : "SÜRE BİTTİ!"}
+            {isVictory ? t("oyun.mukemmel") : t("sonSaniye.sureBitti")}
           </Text>
           <Text style={styles.resultSub}>
-            {mod === "dokunmali" ? "Dokunmalı Mod" : "Yazmalı Mod"}
+            {mod === "dokunmali"
+              ? t("sonSaniye.dokunmaliMod")
+              : t("sonSaniye.yazmaliMod")}
           </Text>
 
           <Animated.View
             style={styles.scoreBox}
             entering={FadeInDown.delay(150).duration(400)}
           >
-            <Text style={styles.scoreBoxLabel}>TOPLAM SKOR</Text>
+            <Text style={styles.scoreBoxLabel}>
+              {t("sonSaniye.toplamSkor")}
+            </Text>
             <Text style={styles.scoreBoxValue}>{score}</Text>
           </Animated.View>
 
@@ -401,29 +426,40 @@ export default function SonSaniyeScreen() {
             style={styles.xpBox}
             entering={FadeInDown.delay(300).duration(400)}
           >
-            <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
+            <Text style={styles.xpText}>
+              {t("oyun.xpKazandin", { xp: earnedXP })}
+            </Text>
           </Animated.View>
 
           <Text style={styles.levelReached}>
-            Ulaşılan Seviye: {levelIndex + 1} / {LEVELS.length}
+            {t("sonSaniye.ulasilanSeviyeSatir", {
+              simdi: levelIndex + 1,
+              toplam: LEVELS.length,
+            })}
           </Text>
 
           <TouchableOpacity
             style={styles.btnPrimary}
             onPress={() => startGame(mod)}
           >
-            <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
+            <Text style={styles.btnPrimaryText}>
+              {t("ortak.yenidenOynaBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.btnSecondary} onPress={modDegistir}>
-            <Text style={styles.btnSecondaryText}>MOD DEĞİŞTİR</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.modDegistirBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={() => router.replace("/(drawer)/(tabs)")}
           >
-            <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.anaMenuBuyuk")}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -437,10 +473,12 @@ export default function SonSaniyeScreen() {
         <GeriSayim
           kalan={geriSayim.kalan!}
           renk="#c8ff3e"
-          baslik={`SON SANİYE · ${mod === "dokunmali" ? "DOKUNMALI" : "YAZMALI"}`}
+          baslik={`${t("skorTablosu.sekme.sonsaniye")} · ${
+            mod === "dokunmali" ? t("zorluk.dokunmali") : t("zorluk.yazmali")
+          }`}
         />
         <TouchableOpacity style={styles.backButton} onPress={modDegistir}>
-          <Text style={styles.backText}>Mod Değiştir</Text>
+          <Text style={styles.backText}>{t("ortak.modDegistir")}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -457,11 +495,12 @@ export default function SonSaniyeScreen() {
         <View style={styles.brand}>
           <View style={styles.dot} />
           <Text style={styles.brandText}>
-            SON SANİYE · {dokunmaliMod ? "DOKUNMALI" : "YAZMALI"}
+            {t("skorTablosu.sekme.sonsaniye")} ·{" "}
+            {dokunmaliMod ? t("zorluk.dokunmali") : t("zorluk.yazmali")}
           </Text>
         </View>
         <View style={styles.scoreWrap}>
-          <Text style={styles.scoreLabel}>SKOR</Text>
+          <Text style={styles.scoreLabel}>{t("oyun.skor")}</Text>
           <Text style={styles.scoreValue}>{score}</Text>
         </View>
       </View>
@@ -477,7 +516,10 @@ export default function SonSaniyeScreen() {
       <View style={styles.levelBar}>
         <View>
           <Text style={styles.levelName}>
-            Seviye {LEVELS[levelIndex].id} — {LEVELS[levelIndex].name}
+            {t("sonSaniye.seviyeSatir", {
+              no: LEVELS[levelIndex].id,
+              ad: t(`sonSaniye.seviyeAd.${LEVELS[levelIndex].id}`),
+            })}
           </Text>
           <Text style={styles.levelProgress}>
             <Text style={styles.levelProgressBold}>{levelSolved}</Text> /{" "}
@@ -561,7 +603,7 @@ export default function SonSaniyeScreen() {
           style={styles.input}
           value={input}
           onChangeText={setInput}
-          placeholder="Kelimeyi yaz..."
+          placeholder={t("sonSaniye.kelimeyiYaz")}
           placeholderTextColor="#7a7a85"
           autoCapitalize="none"
           autoCorrect={false}
@@ -572,11 +614,11 @@ export default function SonSaniyeScreen() {
       {/* Butonlar */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.btnPass} onPress={passWord}>
-          <Text style={styles.btnPassText}>PAS (-5)</Text>
+          <Text style={styles.btnPassText}>{t("sonSaniye.pasBtn")}</Text>
         </TouchableOpacity>
         {!dokunmaliMod && (
           <TouchableOpacity style={styles.btnSubmit} onPress={submitWord}>
-            <Text style={styles.btnSubmitText}>ONAYLA</Text>
+            <Text style={styles.btnSubmitText}>{t("oyun.onayla")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -585,7 +627,7 @@ export default function SonSaniyeScreen() {
       <Text
         style={[
           styles.feedback,
-          feedback.includes("YANLIŞ")
+          feedback.includes(t("oyun.yanlis"))
             ? styles.feedbackWrong
             : styles.feedbackCorrect,
         ]}
@@ -595,7 +637,7 @@ export default function SonSaniyeScreen() {
 
       {/* Geri */}
       <TouchableOpacity style={styles.backButton} onPress={modDegistir}>
-        <Text style={styles.backText}>Mod Değiştir</Text>
+        <Text style={styles.backText}>{t("ortak.modDegistir")}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

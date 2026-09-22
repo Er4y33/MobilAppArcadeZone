@@ -1,29 +1,33 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
-    ActivityIndicator,
-    Alert,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-    formatShortDate,
-    getDaysUntilReset,
-    getNextResetDate,
-    getWeeklyTasks,
-    getWeekStart,
-    REWARD_BY_DIFFICULTY,
-    TaskDefinition,
-} from "../../../constants/tasks";
+  formatShortDate,
+  getDaysUntilReset,
+  getNextResetDate,
+  getWeeklyTasks,
+  getWeekStart,
+  REWARD_BY_DIFFICULTY,
+  TaskDefinition,
+  taskDescription,
+  taskTitle,
+} from "../../../constants/tasks_const";
 import { useAuth } from "../../../context/AuthContext";
 import { useScores } from "../../../context/ScoreContext";
 import { useSound } from "../../../context/SoundContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { supabase } from "../../../lib/supabase";
+
 type TaskProgress = {
   task: TaskDefinition;
   completed: boolean;
@@ -36,6 +40,7 @@ export default function TasksScreen() {
   const { scores, loading, refreshScores } = useScores();
   const { colors } = useTheme();
   const { user, refreshProfile } = useAuth();
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = React.useState(false);
   const [claimedIds, setClaimedIds] = React.useState<string[]>([]);
   const [claimingId, setClaimingId] = React.useState<string | null>(null);
@@ -83,7 +88,7 @@ export default function TasksScreen() {
           task,
           completed,
           progressRatio: completed ? 1 : Math.min(task.target / best, 0.95),
-          displayText: `En iyi: ${best}`,
+          displayText: t("gorevler.enIyi", { sayi: best }),
           reward,
         };
       }
@@ -99,26 +104,26 @@ export default function TasksScreen() {
       };
     });
 
-    // Tamamlanmamışlar üstte, tamamlananlar altta
     return list;
-  }, [scores, weeklyTasks, weekStart]);
+  }, [scores, weeklyTasks, weekStart, t]);
 
   const completedCount = taskProgressList.filter((t) => t.completed).length;
   const totalCount = taskProgressList.length;
   const earnedCoins = taskProgressList
-    .filter((t) => claimedIds.includes(t.task.id))
-    .reduce((sum, t) => sum + t.reward, 0);
-  const totalCoins = taskProgressList.reduce((sum, t) => sum + t.reward, 0);
+    .filter((x) => claimedIds.includes(x.task.id))
+    .reduce((sum, x) => sum + x.reward, 0);
+  const totalCoins = taskProgressList.reduce((sum, x) => sum + x.reward, 0);
 
   const siraliGorevler = useMemo(() => {
-    const oncelik = (t: TaskProgress): number => {
-      const alindi = claimedIds.includes(t.task.id);
-      if (t.completed && !alindi) return 0; // ödül bekliyor → en üst
-      if (!t.completed) return 1; // devam ediyor → orta
+    const oncelik = (x: TaskProgress): number => {
+      const alindi = claimedIds.includes(x.task.id);
+      if (x.completed && !alindi) return 0; // ödül bekliyor → en üst
+      if (!x.completed) return 1; // devam ediyor → orta
       return 2; // ödül alındı → en alt
     };
     return [...taskProgressList].sort((a, b) => oncelik(a) - oncelik(b));
   }, [taskProgressList, claimedIds]);
+
   const fetchClaimed = React.useCallback(async () => {
     if (!user) return;
     const weekStartStr = `${weekStart.getFullYear()}-${String(
@@ -151,13 +156,16 @@ export default function TasksScreen() {
     setClaimingId(null);
 
     if (error) {
-      Alert.alert("Ödül alınamadı", error.message);
+      Alert.alert(t("gorevler.odulAlinamadi"), error.message);
       return;
     }
     cal("win");
     await fetchClaimed();
     await refreshProfile();
-    Alert.alert("Ödül alındı!", `🪙 ${reward} coin hesabına eklendi.`);
+    Alert.alert(
+      t("gorevler.odulAlindiBaslik"),
+      t("gorevler.coinEklendi", { sayi: reward }),
+    );
   };
 
   const difficultyColor = (d: TaskDefinition["difficulty"]) =>
@@ -170,10 +178,11 @@ export default function TasksScreen() {
       {/* Yenilenme bilgisi */}
       <View style={[styles.resetCard, { backgroundColor: colors.surfaceAlt }]}>
         <Text style={[styles.resetText, { color: colors.textSecondary }]}>
-          🔄 Görevler {formatShortDate(weekStart)} tarihinde yenilendi
+          🔄 {t("gorevler.yenilendi", { tarih: formatShortDate(weekStart) })}
         </Text>
         <Text style={[styles.resetSub, { color: colors.textMuted }]}>
-          Yeni görevlere {daysLeft} gün kaldı ({formatShortDate(nextReset)})
+          {t("gorevler.kalanGun", { gun: daysLeft })} (
+          {formatShortDate(nextReset)})
         </Text>
       </View>
 
@@ -181,7 +190,7 @@ export default function TasksScreen() {
       <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
         <View style={styles.summaryRow}>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
-            TAMAMLANAN
+            {t("gorevler.tamamlanan")}
           </Text>
           <Text style={[styles.summaryValue, { color: colors.success }]}>
             {completedCount} / {totalCount}
@@ -199,7 +208,11 @@ export default function TasksScreen() {
           />
         </View>
         <Text style={[styles.coinSummary, { color: colors.accent }]}>
-          🪙 {earnedCoins} / {totalCoins} coin alındı
+          🪙{" "}
+          {t("gorevler.coinAlindi", {
+            alinan: earnedCoins,
+            toplam: totalCoins,
+          })}
         </Text>
       </View>
 
@@ -237,10 +250,10 @@ export default function TasksScreen() {
                 <Text style={styles.taskEmoji}>{item.task.emoji}</Text>
                 <View style={styles.taskTitleBox}>
                   <Text style={[styles.taskTitle, { color: colors.text }]}>
-                    {item.task.title}
+                    {taskTitle(item.task)}
                   </Text>
                   <Text style={[styles.taskGame, { color: colors.textMuted }]}>
-                    {item.task.gameName}
+                    {t(`oyunlar.${item.task.gameId}.ad`)}
                   </Text>
                 </View>
                 {item.completed && (
@@ -256,7 +269,7 @@ export default function TasksScreen() {
               </View>
 
               <Text style={[styles.taskDesc, { color: colors.textSecondary }]}>
-                {item.task.description}
+                {taskDescription(item.task)}
               </Text>
 
               {/* Zorluk + Ödül etiketleri */}
@@ -273,7 +286,7 @@ export default function TasksScreen() {
                       { color: difficultyColor(item.task.difficulty) },
                     ]}
                   >
-                    {item.task.difficulty.toUpperCase()}
+                    {t(`zorluk.${item.task.difficulty}`)}
                   </Text>
                 </View>
                 <View style={[styles.tag, { borderColor: colors.accent }]}>
@@ -300,7 +313,7 @@ export default function TasksScreen() {
               </View>
 
               <Text style={[styles.taskProgress, { color: colors.textMuted }]}>
-                {item.completed ? "Tamamlandı!" : item.displayText}
+                {item.completed ? t("gorevler.tamamlandi") : item.displayText}
               </Text>
 
               {item.completed && (
@@ -333,8 +346,8 @@ export default function TasksScreen() {
                     {claimingId === item.task.id
                       ? "..."
                       : claimedIds.includes(item.task.id)
-                        ? "✓ ÖDÜL ALINDI"
-                        : `🪙 ${item.reward} ÖDÜLÜ AL`}
+                        ? t("gorevler.odulAlindiBtn")
+                        : t("gorevler.odulAl", { sayi: item.reward })}
                   </Text>
                 </TouchableOpacity>
               )}

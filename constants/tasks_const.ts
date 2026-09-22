@@ -1,5 +1,8 @@
 // constants/tasks.ts
 // Haftalık görev sistemi. İlerleme game_sessions verisinden hesaplanır.
+// Görev başlıkları/açıklamaları locales/*.json içinde: gorevler.liste.<id>.baslik
+
+import i18n from "../lib/i18n";
 
 export type TaskType = "play_count" | "best_score_below" | "best_score_above";
 export type Difficulty = "kolay" | "orta" | "zor";
@@ -14,10 +17,7 @@ export type GameId =
 export type TaskDefinition = {
   id: string;
   gameId: GameId;
-  gameName: string;
   emoji: string;
-  title: string;
-  description: string;
   type: TaskType;
   target: number;
   difficulty: Difficulty;
@@ -36,10 +36,7 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "reaction_play_5",
     gameId: "reaction",
-    gameName: "Tepki Testi",
     emoji: "⚡",
-    title: "Isınma Turu",
-    description: "Tepki Testi'ni 5 kez oyna",
     type: "play_count",
     target: 5,
     difficulty: "kolay",
@@ -47,10 +44,7 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "reaction_under_200",
     gameId: "reaction",
-    gameName: "Tepki Testi",
     emoji: "⚡",
-    title: "Şimşek Refleks",
-    description: "Tepki Testi'inde 200 ms altına in",
     type: "best_score_below",
     target: 200,
     difficulty: "orta",
@@ -58,23 +52,17 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "reaction_under_120",
     gameId: "reaction",
-    gameName: "Tepki Testi",
     emoji: "⚡",
-    title: "Yıldırım Hızı",
-    description: "Tepki Testi'inde 120 ms altına in",
     type: "best_score_below",
     target: 120,
     difficulty: "zor",
   },
 
-  // ── Hafıza Eşleştirme ────────────────────────────────────────
+  // ── Hafıza Eşleştirme ──────────────────────────────────
   {
     id: "memory_play_5",
     gameId: "memory",
-    gameName: "Hafıza Eşleştirme",
     emoji: "🧠",
-    title: "Kart Delisi",
-    description: "Hafıza Eşleştirme'yi 5 kez oyna",
     type: "play_count",
     target: 5,
     difficulty: "kolay",
@@ -82,10 +70,7 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "memory_under_14",
     gameId: "memory",
-    gameName: "Hafıza Eşleştirme",
     emoji: "🧠",
-    title: "Keskin Hafıza",
-    description: "Hafıza Eşleştirme'yi 14 hamleden az bitir",
     type: "best_score_below",
     target: 14,
     difficulty: "orta",
@@ -93,23 +78,17 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "memory_under_12",
     gameId: "memory",
-    gameName: "Hafıza Eşleştirme",
     emoji: "🧠",
-    title: "Fotoğrafik Hafıza",
-    description: "Hafıza Eşleştirme'yi 12 hamleden az bitir",
     type: "best_score_below",
     target: 12,
     difficulty: "zor",
   },
 
-  // ── Son Saniye ──────────────────────────────────────────
+  // ── Son Saniye ─────────────────────────────────────────
   {
     id: "sonsaniye_play_3",
     gameId: "sonsaniye",
-    gameName: "Son Saniye",
     emoji: "⏱",
-    title: "Kelime Avcısı",
-    description: "Son Saniye'yi 3 kez oyna",
     type: "play_count",
     target: 3,
     difficulty: "kolay",
@@ -117,10 +96,7 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "sonsaniye_over_200",
     gameId: "sonsaniye",
-    gameName: "Son Saniye",
     emoji: "⏱",
-    title: "Sözcük Dağarcığı",
-    description: "Son Saniye'de 200 puanı geç",
     type: "best_score_above",
     target: 200,
     difficulty: "orta",
@@ -128,23 +104,17 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "sonsaniye_over_400",
     gameId: "sonsaniye",
-    gameName: "Son Saniye",
     emoji: "⏱",
-    title: "Kelime Ustası",
-    description: "Son Saniye'de 400 puanı geç",
     type: "best_score_above",
     target: 400,
     difficulty: "zor",
   },
 
-  // ── Sayı Avı ────────────────────────────────────────────
+  // ── Sayı Avı ───────────────────────────────────────────
   {
     id: "mathrush_play_3",
     gameId: "mathrush",
-    gameName: "Sayı Avı",
     emoji: "🔢",
-    title: "Matematik Sever",
-    description: "Sayı Avı'nı 3 kez oyna",
     type: "play_count",
     target: 3,
     difficulty: "kolay",
@@ -152,10 +122,7 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "mathrush_over_150",
     gameId: "mathrush",
-    gameName: "Sayı Avı",
     emoji: "🔢",
-    title: "Hesap Makinesi",
-    description: "Sayı Avı'nda 150 puanı geç",
     type: "best_score_above",
     target: 150,
     difficulty: "orta",
@@ -163,23 +130,17 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "mathrush_over_220",
     gameId: "mathrush",
-    gameName: "Sayı Avı",
     emoji: "🔢",
-    title: "Sayı Dehası",
-    description: "Sayı Avı'nda 220 puanı geç",
     type: "best_score_above",
     target: 220,
     difficulty: "zor",
   },
 
-  // ── Sırayı Takip Et ─────────────────────────────────────
+  // ── Sırayı Takip Et ────────────────────────────────────
   {
     id: "pattern_play_3",
     gameId: "pattern",
-    gameName: "Sırayı Takip Et",
     emoji: "🎨",
-    title: "Sıra Takipçisi",
-    description: "Sırayı Takip Et'i 3 kez oyna",
     type: "play_count",
     target: 3,
     difficulty: "kolay",
@@ -187,10 +148,7 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "pattern_reach_8",
     gameId: "pattern",
-    gameName: "Sırayı Takip Et",
     emoji: "🎨",
-    title: "Dizi Avcısı",
-    description: "Sırayı Takip Et'te 8. seviyeye ulaş",
     type: "best_score_above",
     target: 8,
     difficulty: "orta",
@@ -198,10 +156,7 @@ export const TASK_POOL: TaskDefinition[] = [
   {
     id: "pattern_reach_12",
     gameId: "pattern",
-    gameName: "Sırayı Takip Et",
     emoji: "🎨",
-    title: "Dizi Efsanesi",
-    description: "Sırayı Takip Et'te 12. seviyeye ulaş",
     type: "best_score_above",
     target: 12,
     difficulty: "zor",
@@ -271,21 +226,18 @@ export function getWeeklyTasks(now: Date = new Date()): TaskDefinition[] {
   return pool.slice(0, WEEKLY_TASK_COUNT);
 }
 
-/** Tarihi "3 Ağustos" formatında yazar */
+/** Görev başlığı — seçili dilde */
+export function taskTitle(task: TaskDefinition): string {
+  return i18n.t(`gorevler.liste.${task.id}.baslik`);
+}
+
+/** Görev açıklaması — seçili dilde */
+export function taskDescription(task: TaskDefinition): string {
+  return i18n.t(`gorevler.liste.${task.id}.aciklama`);
+}
+
+/** Tarihi "3 Ağustos" / "3 August" formatında yazar */
 export function formatShortDate(date: Date): string {
-  const months = [
-    "Ocak",
-    "Şubat",
-    "Mart",
-    "Nisan",
-    "Mayıs",
-    "Haziran",
-    "Temmuz",
-    "Ağustos",
-    "Eylül",
-    "Ekim",
-    "Kasım",
-    "Aralık",
-  ];
-  return `${date.getDate()} ${months[date.getMonth()]}`;
+  const ay = i18n.t(`aylar.${date.getMonth() + 1}`);
+  return `${date.getDate()} ${ay}`;
 }

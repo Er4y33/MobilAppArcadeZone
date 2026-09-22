@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -23,27 +24,29 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const handleSignup = async () => {
     if (!username.trim() || !email.trim() || !password.trim()) {
-      Alert.alert("Hata", "Tüm alanlar zorunludur.");
+      Alert.alert(t("ortak.hata"), t("kayit.tumAlanlar"));
       return;
     }
     if (password.length < 6) {
-      Alert.alert("Hata", "Şifre en az 6 karakter olmalıdır.");
+      Alert.alert(t("ortak.hata"), t("kayit.sifreKisa"));
       return;
     }
     setLoading(true);
     const { error } = await signUp(email.trim(), password, username.trim());
     setLoading(false);
     if (error) {
-      Alert.alert("Kayıt Başarısız", error);
+      Alert.alert(t("kayit.basarisiz"), error);
     } else {
-      Alert.alert(
-        "Kayıt Başarılı! 🎉",
-        "Hesabın oluşturuldu. Şimdi giriş yapabilirsin.",
-        [{ text: "Tamam", onPress: () => router.replace("/(auth)/login") }],
-      );
+      Alert.alert(t("kayit.basarili"), t("kayit.basariliMesaj"), [
+        {
+          text: t("ortak.tamam"),
+          onPress: () => router.replace("/(auth)/login"),
+        },
+      ]);
     }
   };
 
@@ -67,15 +70,15 @@ export default function SignupScreen() {
           </View>
 
           <Text style={[styles.title, { color: colors.text }]}>
-            Hesap Oluştur
+            {t("kayit.baslik")}
           </Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            Katıl, oyna ve lider tablosuna gir!
+            {t("kayit.altBaslik")}
           </Text>
 
           <View style={styles.inputWrap}>
             <Text style={[styles.label, { color: colors.textMuted }]}>
-              Kullanıcı Adı
+              {t("kayit.kullaniciAdi")}
             </Text>
             <TextInput
               style={[
@@ -88,7 +91,7 @@ export default function SignupScreen() {
               ]}
               value={username}
               onChangeText={setUsername}
-              placeholder="ArcadeKing"
+              placeholder={t("kayit.kullaniciAdiOrnek")}
               placeholderTextColor={colors.textMuted}
               autoCapitalize="none"
               autoCorrect={false}
@@ -97,7 +100,7 @@ export default function SignupScreen() {
 
           <View style={styles.inputWrap}>
             <Text style={[styles.label, { color: colors.textMuted }]}>
-              E-Posta Adresi
+              {t("giris.eposta")}
             </Text>
             <TextInput
               style={[
@@ -110,7 +113,7 @@ export default function SignupScreen() {
               ]}
               value={email}
               onChangeText={setEmail}
-              placeholder="ornek@mail.com"
+              placeholder={t("giris.epostaOrnek")}
               placeholderTextColor={colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -120,7 +123,7 @@ export default function SignupScreen() {
 
           <View style={styles.inputWrap}>
             <Text style={[styles.label, { color: colors.textMuted }]}>
-              Şifre
+              {t("giris.sifre")}
             </Text>
             <TextInput
               style={[
@@ -133,7 +136,7 @@ export default function SignupScreen() {
               ]}
               value={password}
               onChangeText={setPassword}
-              placeholder="En az 6 karakter"
+              placeholder={t("kayit.sifreOrnek")}
               placeholderTextColor={colors.textMuted}
               secureTextEntry
             />
@@ -147,7 +150,7 @@ export default function SignupScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.btnPrimaryText}>HESAP OLUŞTUR</Text>
+              <Text style={styles.btnPrimaryText}>{t("kayit.btn")}</Text>
             )}
           </TouchableOpacity>
 
@@ -156,9 +159,9 @@ export default function SignupScreen() {
             onPress={() => router.replace("/(auth)/login")}
           >
             <Text style={[styles.linkText, { color: colors.textMuted }]}>
-              Zaten hesabın var mı?{" "}
+              {t("kayit.zatenVar")}
               <Text style={[styles.linkAccent, { color: colors.primaryAlt }]}>
-                Giriş Yap
+                {t("kayit.girisYap")}
               </Text>
             </Text>
           </TouchableOpacity>

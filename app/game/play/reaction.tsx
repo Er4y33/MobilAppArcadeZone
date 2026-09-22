@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../../context/ScoreContext";
@@ -22,6 +23,7 @@ export default function ReactionTapScreen() {
   const startTimeRef = useRef<number | null>(null);
   const { addScore, getBestScore } = useScores();
   const { cal } = useSound();
+  const { t } = useTranslation();
 
   useEffect(() => {
     startRound();
@@ -104,40 +106,42 @@ export default function ReactionTapScreen() {
   // Mesaj
   const message =
     gameState === "waiting"
-      ? "Hazır ol..."
+      ? t("tepki.hazirOl")
       : gameState === "ready"
-        ? "DOKUN!"
+        ? t("tepki.dokun")
         : gameState === "tooSoon"
-          ? "Çok erken!"
+          ? t("tepki.cokErken")
           : result !== null
             ? `${result} ms`
             : "";
 
   const subMessage =
     gameState === "waiting"
-      ? "Yeşile dönünce dokun"
+      ? t("tepki.yesileDonunce")
       : gameState === "ready"
-        ? "ŞİMDİ!"
+        ? t("tepki.simdi")
         : gameState === "tooSoon"
-          ? "Tekrar denemek için dokun"
+          ? t("tepki.tekrarDene")
           : gameState === "tapped"
             ? result !== null && result < 150
-              ? "İnanılmaz hız! ⚡"
+              ? t("tepki.inanilmaz")
               : result !== null && result < 200
-                ? "Çok hızlı! 🔥"
+                ? t("tepki.cokHizli")
                 : result !== null && result < 300
-                  ? "İyi tepki 👍"
-                  : "Biraz yavaş, tekrar dene"
+                  ? t("tepki.iyiTepki")
+                  : t("tepki.yavas")
             : "";
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Başlık */}
       <View style={styles.topBar}>
-        <Text style={styles.gameTitle}>TEPKİ TESTİ</Text>
+        <Text style={styles.gameTitle}>{t("tepki.baslik")}</Text>
         {bestSession !== null && (
           <View style={styles.bestBadge}>
-            <Text style={styles.bestBadgeText}>EN İYİ: {bestSession}ms</Text>
+            <Text style={styles.bestBadgeText}>
+              {t("tepki.enIyiRozet", { ms: bestSession })}
+            </Text>
           </View>
         )}
       </View>
@@ -145,7 +149,7 @@ export default function ReactionTapScreen() {
       {/* Rekor banner */}
       {showRecord && (
         <View style={styles.recordBanner}>
-          <Text style={styles.recordText}>🎉 YENİ REKOR!</Text>
+          <Text style={styles.recordText}>{t("tepki.yeniRekor")}</Text>
         </View>
       )}
 
@@ -166,7 +170,7 @@ export default function ReactionTapScreen() {
 
         {gameState === "ready" && (
           <View style={styles.readyCircle}>
-            <Text style={styles.readyLabel}>DOKUN!</Text>
+            <Text style={styles.readyLabel}>{t("tepki.dokun")}</Text>
           </View>
         )}
 
@@ -189,11 +193,11 @@ export default function ReactionTapScreen() {
       {gameState === "tapped" && result !== null && (
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>SKOR</Text>
+            <Text style={styles.statLabel}>{t("tepki.skor")}</Text>
             <Text style={styles.statValue}>{result} ms</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>EN İYİ</Text>
+            <Text style={styles.statLabel}>{t("tepki.enIyi")}</Text>
             <Text style={[styles.statValue, { color: "#A855F7" }]}>
               {bestSession ?? result} ms
             </Text>
@@ -202,7 +206,7 @@ export default function ReactionTapScreen() {
       )}
 
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>Geri Dön</Text>
+        <Text style={styles.backText}>{t("ortak.geriDon")}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Linking,
   ScrollView,
@@ -11,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
+
+// Ürün adları — çevrilmez
 const TEKNOLOJILER = [
   "React Native",
   "Expo",
@@ -22,6 +25,7 @@ const TEKNOLOJILER = [
 
 export default function AboutScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView
@@ -45,15 +49,13 @@ export default function AboutScreen() {
         {/* Hakkında */}
         <View style={[styles.infoBox, { backgroundColor: colors.surface }]}>
           <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            ArcadeZone, refleks, hafıza, kelime ve matematik becerilerini
-            geliştiren beş mini oyundan oluşan bir koleksiyondur. Bir okul
-            projesi olarak başladı, sonrasında geliştirilerek yayınlandı.
+            {t("hakkinda.tanitim")}
           </Text>
         </View>
 
         {/* Ekip */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-          EKİP
+          {t("hakkinda.ekip")}
         </Text>
 
         <View
@@ -64,11 +66,10 @@ export default function AboutScreen() {
         >
           <Text style={[styles.devName, { color: colors.text }]}>Eray</Text>
           <Text style={[styles.devRole, { color: colors.accent }]}>
-            Geliştirme & Backend
+            {t("hakkinda.erayRol")}
           </Text>
           <Text style={[styles.devDetail, { color: colors.textMuted }]}>
-            Oyun mekanikleri, zorluk sistemi, veritabanı mimarisi, skor ve ödül
-            altyapısı, ses sistemi, yayın süreci
+            {t("hakkinda.erayDetay")}
           </Text>
           <TouchableOpacity
             style={[styles.ghBtn, { borderColor: colors.border }]}
@@ -90,10 +91,10 @@ export default function AboutScreen() {
             Melih Atahan Akgün
           </Text>
           <Text style={[styles.devRole, { color: colors.primary }]}>
-            Arayüz Tasarımı
+            {t("hakkinda.melihRol")}
           </Text>
           <Text style={[styles.devDetail, { color: colors.textMuted }]}>
-            İlk sürüm arayüz tasarımı ve görsel yönelim
+            {t("hakkinda.melihDetay")}
           </Text>
           <TouchableOpacity
             style={[styles.ghBtn, { borderColor: colors.border }]}
@@ -109,13 +110,13 @@ export default function AboutScreen() {
 
         {/* Teknolojiler */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-          KULLANILAN TEKNOLOJİLER
+          {t("hakkinda.teknolojiler")}
         </Text>
 
         <View style={styles.etiketSatiri}>
-          {TEKNOLOJILER.map((t) => (
+          {TEKNOLOJILER.map((tek) => (
             <View
-              key={t}
+              key={tek}
               style={[
                 styles.etiket,
                 {
@@ -125,7 +126,7 @@ export default function AboutScreen() {
               ]}
             >
               <Text style={[styles.etiketMetin, { color: colors.textMuted }]}>
-                {t}
+                {tek}
               </Text>
             </View>
           ))}
@@ -134,10 +135,10 @@ export default function AboutScreen() {
         {/* Teşekkürler */}
         <View style={[styles.thanksBox, { backgroundColor: colors.surface }]}>
           <Text style={[styles.thanksLabel, { color: colors.textMuted }]}>
-            ÖZEL TEŞEKKÜRLER
+            {t("hakkinda.ozelTesekkurler")}
           </Text>
           <Text style={[styles.thanksText, { color: colors.textSecondary }]}>
-            Tüm ArcadeZone Oyuncularına!
+            {t("hakkinda.tesekkurMetni")}
           </Text>
           <TouchableOpacity
             style={{ marginTop: 14 }}
@@ -146,7 +147,7 @@ export default function AboutScreen() {
             }
           >
             <Text style={[styles.thanksText, { color: colors.info }]}>
-              Gizlilik Politikası
+              {t("hakkinda.gizlilikPolitikasi")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -156,7 +157,7 @@ export default function AboutScreen() {
           onPress={() => router.back()}
         >
           <Text style={[styles.menuBtnText, { color: colors.text }]}>
-            GERİ DÖN
+            {t("ortak.geriDonBuyuk")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

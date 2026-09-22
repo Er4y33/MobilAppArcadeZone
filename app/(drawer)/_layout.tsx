@@ -7,6 +7,7 @@ import Constants from "expo-constants";
 import { router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { useSound } from "../../context/SoundContext";
@@ -14,23 +15,33 @@ import { useTheme } from "../../context/ThemeContext";
 
 type MenuOgesi = {
   ikon: keyof typeof Ionicons.glyphMap;
-  etiket: string;
+  anahtar: string; // locales/*.json → sekmeler.*
   yol: string;
 };
 
 // Tab bar'da olmayan, ara sıra açılan ekranlar
 const MENU: MenuOgesi[] = [
-  { ikon: "person-circle-outline", etiket: "Profil", yol: "/profile" },
-  { ikon: "settings-outline", etiket: "Ayarlar", yol: "/settings" },
-  { ikon: "information-circle-outline", etiket: "Hakkında", yol: "/about" },
+  {
+    ikon: "person-circle-outline",
+    anahtar: "sekmeler.profil",
+    yol: "/profile",
+  },
+  { ikon: "settings-outline", anahtar: "sekmeler.ayarlar", yol: "/settings" },
+  {
+    ikon: "information-circle-outline",
+    anahtar: "sekmeler.hakkinda",
+    yol: "/about",
+  },
 ];
 
 function DrawerIcerik(props: DrawerContentComponentProps) {
   const { colors } = useTheme();
   const { user, profile } = useAuth();
   const { cal } = useSound();
+  const { t } = useTranslation();
 
-  const username = profile?.username || user?.email?.split("@")[0] || "Oyuncu";
+  const username =
+    profile?.username || user?.email?.split("@")[0] || t("ortak.oyuncu");
   const level = profile?.level ?? 1;
   const coins = profile?.coins ?? 0;
 
@@ -63,14 +74,14 @@ function DrawerIcerik(props: DrawerContentComponentProps) {
               style={[styles.rozet, { backgroundColor: colors.surfaceAlt }]}
             >
               <Text style={[styles.rozetMetin, { color: colors.textMuted }]}>
-                Seviye {level}
+                {t("ortak.seviye")} {level}
               </Text>
             </View>
             <View
               style={[styles.rozet, { backgroundColor: colors.surfaceAlt }]}
             >
               <Text style={[styles.rozetMetin, { color: colors.textMuted }]}>
-                {coins} coin
+                {coins} {t("ortak.coin")}
               </Text>
             </View>
           </View>
@@ -87,7 +98,7 @@ function DrawerIcerik(props: DrawerContentComponentProps) {
             >
               <Ionicons name={oge.ikon} size={22} color={colors.text} />
               <Text style={[styles.satirMetin, { color: colors.text }]}>
-                {oge.etiket}
+                {t(oge.anahtar)}
               </Text>
               <Ionicons
                 name="chevron-forward"

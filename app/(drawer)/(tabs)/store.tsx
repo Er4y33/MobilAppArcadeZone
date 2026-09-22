@@ -1,20 +1,23 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-    ActivityIndicator,
-    Alert,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../../context/AuthContext";
 import { useSound } from "../../../context/SoundContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { hapticSuccess } from "../../../lib/haptics";
+import { unvanMetni, urunAciklama, urunAdi } from "../../../lib/magazaUrun";
 import { supabase } from "../../../lib/supabase";
+
 type StoreItem = {
   id: string;
   name: string;
@@ -27,15 +30,17 @@ type StoreItem = {
 
 type Category = "frame" | "badge";
 
-const CATEGORIES: { key: Category; label: string }[] = [
-  { key: "frame", label: "ÇERÇEVELER" },
-  { key: "badge", label: "UNVANLAR" },
+// Labels come from locales/*.json: magaza.cerceveler / magaza.unvanlar
+const CATEGORIES: { key: Category; anahtar: string }[] = [
+  { key: "frame", anahtar: "magaza.cerceveler" },
+  { key: "badge", anahtar: "magaza.unvanlar" },
 ];
 
 export default function StoreScreen() {
   const { user, profile, refreshProfile } = useAuth();
   const { colors } = useTheme();
   const { cal } = useSound();
+  const { t } = useTranslation();
   const [items, setItems] = useState<StoreItem[]>([]);
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
   const [category, setCategory] = useState<Category>("frame");
@@ -52,7 +57,7 @@ export default function StoreScreen() {
       .order("sort_order", { ascending: true });
 
     if (storeError) {
-      console.error("Mağaza yüklenemedi:", storeError.message);
+      console.error("Store could not be loaded:", storeError.message);
     } else {
       setItems((storeData as StoreItem[]) ?? []);
     }
@@ -80,12 +85,15 @@ export default function StoreScreen() {
 
   const handlePurchase = (item: StoreItem) => {
     Alert.alert(
-      "Satın Al",
-      `"${item.name}" ürününü ${item.price} coin karşılığında almak istiyor musun?`,
+      t("magaza.satinAlBaslik"),
+      t("magaza.satinAlSoru", {
+        ad: urunAdi(item.id, item.name),
+        fiyat: item.price,
+      }),
       [
-        { text: "Vazgeç", style: "cancel" },
+        { text: t("ayarlar.vazgec"), style: "cancel" },
         {
-          text: "Satın Al",
+          text: t("magaza.satinAlBaslik"),
           onPress: async () => {
             setBusyId(item.id);
             const { error } = await supabase.rpc("purchase_item", {
@@ -94,15 +102,17 @@ export default function StoreScreen() {
             setBusyId(null);
 
             if (error) {
-              Alert.alert("Satın alınamadı", error.message);
+              Alert.alert(t("magaza.satinAlinamadi"), error.message);
               return;
             }
-            // Satın alma başarılı
             hapticSuccess();
             cal("win");
             await refreshProfile();
             await fetchData();
-            Alert.alert("Tebrikler!", `"${item.name}" artık senin.`);
+            Alert.alert(
+              t("magaza.tebrikler"),
+              t("magaza.artikSenin", { ad: urunAdi(item.id, item.name) }),
+            );
           },
         },
       ],
@@ -121,7 +131,7 @@ export default function StoreScreen() {
 
     setBusyId(null);
     if (error) {
-      Alert.alert("İşlem başarısız", error.message);
+      Alert.alert(t("magaza.islemBasarisiz"), error.message);
       return;
     }
     cal("click");
@@ -135,17 +145,17 @@ export default function StoreScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      {/* Bakiye */}
+      {/* Balance */}
       <View style={[styles.balanceCard, { backgroundColor: colors.surface }]}>
         <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>
-          BAKİYEN
+          {t("magaza.bakiye")}
         </Text>
         <Text style={[styles.balanceValue, { color: colors.accent }]}>
           🪙 {coins}
         </Text>
       </View>
 
-      {/* Kategori sekmeleri */}
+      {/* Category tabs */}
       <View style={[styles.tabBar, { backgroundColor: colors.surface }]}>
         {CATEGORIES.map((c) => (
           <TouchableOpacity
@@ -166,7 +176,7 @@ export default function StoreScreen() {
                 },
               ]}
             >
-              {c.label}
+              {t(c.anahtar)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -210,7 +220,7 @@ export default function StoreScreen() {
                 ]}
               >
                 <View style={styles.itemRow}>
-                  {/* Önizleme */}
+                  {/* Preview */}
                   {item.category === "frame" ? (
                     <View
                       style={[
@@ -238,19 +248,19 @@ export default function StoreScreen() {
                           { color: colors.accent },
                         ]}
                       >
-                        {item.value}
+                        {unvanMetni(item.id, item.value)}
                       </Text>
                     </View>
                   )}
 
                   <View style={styles.itemInfo}>
                     <Text style={[styles.itemName, { color: colors.text }]}>
-                      {item.name}
+                      {urunAdi(item.id, item.name)}
                     </Text>
                     <Text
                       style={[styles.itemDesc, { color: colors.textMuted }]}
                     >
-                      {item.description}
+                      {urunAciklama(item.id, item.description)}
                     </Text>
                   </View>
                 </View>
@@ -275,7 +285,11 @@ export default function StoreScreen() {
                         { color: equipped ? colors.text : "#FFFFFF" },
                       ]}
                     >
-                      {busy ? "..." : equipped ? "KUŞANILDI — KALDIR" : "KUŞAN"}
+                      {busy
+                        ? "..."
+                        : equipped
+                          ? t("magaza.kusanildiKaldir")
+                          : t("magaza.kusan")}
                     </Text>
                   </TouchableOpacity>
                 ) : (
@@ -302,8 +316,8 @@ export default function StoreScreen() {
                       {busy
                         ? "..."
                         : affordable
-                          ? `🪙 ${item.price} — SATIN AL`
-                          : `🪙 ${item.price} — YETERSİZ`}
+                          ? t("magaza.satinAlBtn", { fiyat: item.price })
+                          : t("magaza.yetersiz", { fiyat: item.price })}
                     </Text>
                   </TouchableOpacity>
                 )}

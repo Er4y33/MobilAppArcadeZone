@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -21,17 +22,18 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Hata", "E-posta ve şifre zorunludur.");
+      Alert.alert(t("ortak.hata"), t("giris.zorunlu"));
       return;
     }
     setLoading(true);
     const { error } = await signIn(email.trim(), password);
     setLoading(false);
     if (error) {
-      Alert.alert("Giriş Başarısız", error);
+      Alert.alert(t("giris.basarisiz"), error);
     } else {
       router.replace("/(drawer)/(tabs)");
     }
@@ -52,14 +54,16 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        <Text style={[styles.title, { color: colors.text }]}>Giriş Yap</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {t("giris.baslik")}
+        </Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          Hesabına gir ve oynamaya başla!
+          {t("giris.altBaslik")}
         </Text>
 
         <View style={styles.inputWrap}>
           <Text style={[styles.label, { color: colors.textMuted }]}>
-            E-Posta Adresi
+            {t("giris.eposta")}
           </Text>
           <TextInput
             style={[
@@ -72,7 +76,7 @@ export default function LoginScreen() {
             ]}
             value={email}
             onChangeText={setEmail}
-            placeholder="ornek@mail.com"
+            placeholder={t("giris.epostaOrnek")}
             placeholderTextColor={colors.textMuted}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -81,7 +85,9 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.inputWrap}>
-          <Text style={[styles.label, { color: colors.textMuted }]}>Şifre</Text>
+          <Text style={[styles.label, { color: colors.textMuted }]}>
+            {t("giris.sifre")}
+          </Text>
           <TextInput
             style={[
               styles.input,
@@ -107,9 +113,10 @@ export default function LoginScreen() {
           {loading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.btnPrimaryText}>OYUNA GİR</Text>
+            <Text style={styles.btnPrimaryText}>{t("giris.btn")}</Text>
           )}
         </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => router.push("/(auth)/forgot-password")}
         >
@@ -120,17 +127,18 @@ export default function LoginScreen() {
               marginBottom: 12,
             }}
           >
-            Şifremi unuttum
+            {t("giris.sifremiUnuttum")}
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.linkWrap}
           onPress={() => router.push("/(auth)/signup")}
         >
           <Text style={[styles.linkText, { color: colors.textMuted }]}>
-            Hesabın yok mu?{" "}
+            {t("giris.hesabinYok")}
             <Text style={[styles.linkAccent, { color: colors.primary }]}>
-              Kayıt Ol
+              {t("giris.kayitOl")}
             </Text>
           </Text>
         </TouchableOpacity>

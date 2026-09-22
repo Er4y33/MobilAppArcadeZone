@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,16 +24,13 @@ type Question = {
 
 type Feedback = "none" | "correct" | "wrong" | "timeout";
 
-type ZorlukAyari = {
-  sure: number;
-  etiket: string;
-  aciklama: string;
-};
+// Etiketler locales/*.json'da: zorluk.<z> ve oyunAyar.mathrush.<z>
+type ZorlukAyari = { sure: number };
 
 const AYARLAR: Record<Difficulty, ZorlukAyari> = {
-  kolay: { sure: 9, etiket: "KOLAY", aciklama: "Toplama · Çıkarma" },
-  orta: { sure: 7, etiket: "ORTA", aciklama: "+ − × ÷" },
-  zor: { sure: 6, etiket: "ZOR", aciklama: "+ − × ÷ √ x²" },
+  kolay: { sure: 9 },
+  orta: { sure: 7 },
+  zor: { sure: 6 },
 };
 
 const rnd = (min: number, max: number) =>
@@ -180,7 +178,9 @@ export default function MathRushScreen() {
   const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addScore } = useScores();
   const { cal } = useSound();
+  const { t } = useTranslation();
   const ayar = zorluk ? AYARLAR[zorluk] : null;
+  const zorlukAdi = zorluk ? t(`zorluk.${zorluk}`) : "";
 
   // 3-2-1 bitince ilk soru gelir ve süre akmaya başlar
   const geriSayim = useGeriSayim(
@@ -313,8 +313,10 @@ export default function MathRushScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.secimBox}>
           <Text style={styles.secimEmoji}>🔢</Text>
-          <Text style={styles.secimBaslik}>SAYI AVI</Text>
-          <Text style={styles.secimAlt}>Zorluk seç</Text>
+          <Text style={styles.secimBaslik}>
+            {t("skorTablosu.sekme.mathrush")}
+          </Text>
+          <Text style={styles.secimAlt}>{t("zorluk.sec")}</Text>
 
           {(["kolay", "orta", "zor"] as Difficulty[]).map((z, i) => (
             <Animated.View
@@ -327,9 +329,10 @@ export default function MathRushScreen() {
                 onPress={() => oyunBaslat(z)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.zorlukBtnText}>{AYARLAR[z].etiket}</Text>
+                <Text style={styles.zorlukBtnText}>{t(`zorluk.${z}`)}</Text>
                 <Text style={styles.zorlukBtnSub}>
-                  {AYARLAR[z].aciklama} · {AYARLAR[z].sure} sn
+                  {t(`oyunAyar.mathrush.${z}`)} · {AYARLAR[z].sure}{" "}
+                  {t("ortak.saniyeKisa")}
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -339,7 +342,7 @@ export default function MathRushScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>Geri Dön</Text>
+            <Text style={styles.backText}>{t("ortak.geriDon")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -360,9 +363,11 @@ export default function MathRushScreen() {
           </Animated.Text>
 
           <Text style={styles.resultTitle}>
-            {stars === 3 ? "MÜKEMMEL!" : "BÖLÜM TAMAM!"}
+            {stars === 3 ? t("oyun.mukemmel") : t("oyun.bolumTamam")}
           </Text>
-          <Text style={styles.resultSub}>Sayı Avı · {ayar!.etiket}</Text>
+          <Text style={styles.resultSub}>
+            {t("oyunlar.mathrush.ad")} · {zorlukAdi}
+          </Text>
 
           <Animated.View
             style={styles.starsRow}
@@ -380,18 +385,18 @@ export default function MathRushScreen() {
 
           <View style={styles.statsBox}>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Toplam Puan</Text>
+              <Text style={styles.statLabel}>{t("oyun.toplamPuan")}</Text>
               <Text style={styles.statValue}>{score}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Doğru Cevap</Text>
+              <Text style={styles.statLabel}>{t("oyun.dogruCevap")}</Text>
               <Text style={styles.statValue}>
                 {correctCount} / {TOPLAM_TUR}
               </Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Zorluk</Text>
-              <Text style={styles.statValue}>{ayar!.etiket}</Text>
+              <Text style={styles.statLabel}>{t("ortak.zorluk")}</Text>
+              <Text style={styles.statValue}>{zorlukAdi}</Text>
             </View>
           </View>
 
@@ -399,25 +404,33 @@ export default function MathRushScreen() {
             style={styles.xpBox}
             entering={FadeInDown.delay(300).duration(400)}
           >
-            <Text style={styles.xpText}>+{earnedXP} XP kazandın!</Text>
+            <Text style={styles.xpText}>
+              {t("oyun.xpKazandin", { xp: earnedXP })}
+            </Text>
           </Animated.View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={yenidenOyna}>
-            <Text style={styles.btnPrimaryText}>YENİDEN OYNA</Text>
+            <Text style={styles.btnPrimaryText}>
+              {t("ortak.yenidenOynaBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={zorluguDegistir}
           >
-            <Text style={styles.btnSecondaryText}>ZORLUK DEĞİŞTİR</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.zorlukDegistirBuyuk")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.btnSecondary}
             onPress={() => router.replace("/")}
           >
-            <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
+            <Text style={styles.btnSecondaryText}>
+              {t("ortak.anaMenuBuyuk")}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -431,10 +444,10 @@ export default function MathRushScreen() {
         <GeriSayim
           kalan={geriSayim.kalan!}
           renk="#06B6D4"
-          baslik={`SAYI AVI · ${ayar!.etiket}`}
+          baslik={`${t("skorTablosu.sekme.mathrush")} · ${zorlukAdi}`}
         />
         <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
-          <Text style={styles.backText}>Zorluk Değiştir</Text>
+          <Text style={styles.backText}>{t("ortak.zorlukDegistir")}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -445,15 +458,17 @@ export default function MathRushScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerLabel}>PUAN</Text>
+          <Text style={styles.headerLabel}>{t("oyun.puan")}</Text>
           <Text style={styles.headerValue}>{score}</Text>
         </View>
         <View style={styles.headerCenter}>
-          <Text style={styles.gameTitle}>SAYI AVI</Text>
-          <Text style={styles.gameSub}>{ayar!.etiket}</Text>
+          <Text style={styles.gameTitle}>
+            {t("skorTablosu.sekme.mathrush")}
+          </Text>
+          <Text style={styles.gameSub}>{zorlukAdi}</Text>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.headerLabel}>TUR</Text>
+          <Text style={styles.headerLabel}>{t("oyun.tur")}</Text>
           <Text style={[styles.headerValue, { color: "#06B6D4" }]}>
             {round}/{TOPLAM_TUR}
           </Text>
@@ -479,7 +494,7 @@ export default function MathRushScreen() {
       >
         <Text style={styles.questionText}>{question.metin}</Text>
         {feedback === "timeout" && (
-          <Text style={styles.feedbackText}>Süre doldu!</Text>
+          <Text style={styles.feedbackText}>{t("oyun.sureDoldu")}</Text>
         )}
       </View>
 
@@ -503,7 +518,7 @@ export default function MathRushScreen() {
       </View>
 
       <TouchableOpacity style={styles.backButton} onPress={zorluguDegistir}>
-        <Text style={styles.backText}>Zorluk Değiştir</Text>
+        <Text style={styles.backText}>{t("ortak.zorlukDegistir")}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ScrollView,
   StyleSheet,
@@ -11,65 +12,39 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useScores } from "../../context/ScoreContext";
 import { useTheme } from "../../context/ThemeContext";
 
+// Metinler locales/*.json'dan gelir:
+//   oyunlar.<id>.ad / .nasil   →  başlık ve "nasıl oynanır"
+//   birim.<birim>              →  skor birimi
 const GAME_INFO = {
-  reaction: {
-    emoji: "⚡",
-    howTo:
-      "Ekran yeşile döndüğü anda dokun. Ne kadar hızlısan skorun o kadar iyi — erken dokunursan tur iptal olur.",
-    scoreLabel: "ms",
-    lowerBetter: true,
-  },
-  memory: {
-    emoji: "🧠",
-    howTo:
-      "Kartlar 3 saniye açık kalır, yerlerini aklında tut. Sonra eşlerini bul — az hamleyle bitirmek daha iyi skor demek.",
-    scoreLabel: "hamle",
-    lowerBetter: true,
-  },
-  sonsaniye: {
-    emoji: "⏱",
-    howTo:
-      "Karışık harflerden kelimeyi bul! Her doğru cevap puan ve süre kazandırır. İki mod var: harflere dokunarak ya da klavyeyle yazarak.",
-    scoreLabel: "puan",
-    lowerBetter: false,
-  },
-  mathrush: {
-    emoji: "🔢",
-    howTo:
-      "Ekranda beliren işlemi çöz ve doğru cevabı süre dolmadan seç! Hızlı cevap ekstra puan kazandırır.",
-    scoreLabel: "puan",
-    lowerBetter: false,
-  },
-  pattern: {
-    emoji: "🎨",
-    howTo:
-      "Yanıp sönen renk sırasını izle, sonra aynı sırayla dokun. Her doğru turda sıra bir adım uzar!",
-    scoreLabel: "seviye",
-    lowerBetter: false,
-  },
+  reaction: { emoji: "⚡", birim: "ms" },
+  memory: { emoji: "🧠", birim: "hamle" },
+  sonsaniye: { emoji: "⏱", birim: "puan" },
+  mathrush: { emoji: "🔢", birim: "puan" },
+  pattern: { emoji: "🎨", birim: "seviye" },
 } as const;
 
 type GameKey = keyof typeof GAME_INFO;
 
 export default function GameDetail() {
-  const { id, title } = useLocalSearchParams<{ id?: string; title?: string }>();
+  const { id } = useLocalSearchParams<{ id?: string; title?: string }>();
   const { colors } = useTheme();
   const { getBestScore } = useScores();
+  const { t } = useTranslation();
 
   const gameKey = (id && id in GAME_INFO ? id : "reaction") as GameKey;
   const info = GAME_INFO[gameKey];
   const best = getBestScore(gameKey);
 
   const bestDisplay = best
-    ? `${best.score} ${info.scoreLabel}`
-    : "Henüz oynamadın";
+    ? `${best.score} ${t(`birim.${info.birim}`)}`
+    : t("oyun.henuzOynamadin");
 
   const handleStartGame = () => {
-    if (id === "reaction") router.push("/game/play/reaction");
-    else if (id === "memory") router.push("/game/play/memory");
-    else if (id === "sonsaniye") router.push("/game/play/sonsaniye");
-    else if (id === "mathrush") router.push("/game/play/mathrush");
-    else if (id === "pattern") router.push("/game/play/pattern");
+    if (gameKey === "reaction") router.push("/game/play/reaction");
+    else if (gameKey === "memory") router.push("/game/play/memory");
+    else if (gameKey === "sonsaniye") router.push("/game/play/sonsaniye");
+    else if (gameKey === "mathrush") router.push("/game/play/mathrush");
+    else if (gameKey === "pattern") router.push("/game/play/pattern");
   };
 
   return (
@@ -83,22 +58,22 @@ export default function GameDetail() {
         <View style={styles.headerWrap}>
           <Text style={styles.emoji}>{info.emoji}</Text>
           <Text style={[styles.title, { color: colors.primary }]}>
-            {title || "Oyun Detayı"}
+            {t(`oyunlar.${gameKey}.ad`)}
           </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cardTitle, { color: colors.textMuted }]}>
-            NASIL OYNANIR?
+            {t("oyun.nasilOynanir")}
           </Text>
           <Text style={[styles.howTo, { color: colors.textSecondary }]}>
-            {info.howTo}
+            {t(`oyunlar.${gameKey}.nasil`)}
           </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cardTitle, { color: colors.textMuted }]}>
-            EN İYİ SKORUN
+            {t("oyun.enIyiSkorun")}
           </Text>
           <Text style={[styles.bestScore, { color: colors.accent }]}>
             {bestDisplay}
@@ -109,7 +84,7 @@ export default function GameDetail() {
           style={[styles.startButton, { backgroundColor: colors.success }]}
           onPress={handleStartGame}
         >
-          <Text style={styles.startText}>OYNA</Text>
+          <Text style={styles.startText}>{t("oyun.oyna")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -117,7 +92,7 @@ export default function GameDetail() {
           onPress={() => router.back()}
         >
           <Text style={[styles.backText, { color: colors.textMuted }]}>
-            Geri Dön
+            {t("ortak.geriDon")}
           </Text>
         </TouchableOpacity>
       </ScrollView>
