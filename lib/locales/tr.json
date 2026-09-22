@@ -1,0 +1,147 @@
+{
+  "ortak": {
+    "geriDon": "Geri Dön",
+    "anaMenu": "Ana Menü",
+    "yenidenOyna": "Yeniden Oyna",
+    "zorlukDegistir": "Zorluk Değiştir",
+    "modDegistir": "Mod Değiştir",
+    "kapat": "Kapat",
+    "iptal": "İptal",
+    "tamam": "Tamam",
+    "kaydet": "Kaydet",
+    "yukleniyor": "Yükleniyor...",
+    "hazirOl": "Hazır ol!",
+    "coin": "coin",
+    "seviye": "Seviye",
+    "xp": "XP",
+    "puan": "Puan"
+  },
+  "sekmeler": {
+    "anaMenu": "Ana Menü",
+    "oyunlar": "Oyunlar",
+    "gorevler": "Görevler",
+    "magaza": "Mağaza",
+    "skor": "Skor",
+    "profil": "Profil",
+    "ayarlar": "Ayarlar",
+    "hakkinda": "Hakkında"
+  },
+  "anaMenu": {
+    "oyna": "OYNA",
+    "oynaAlt": "{{sayi}} mini oyun seni bekliyor"
+  },
+  "oyunlar": {
+    "baslik": "Oyunlar",
+    "altBaslik": "{{sayi}} oyun · Oynadıkça XP kazan",
+    "reaction": {
+      "ad": "Tepki Testi",
+      "aciklama": "Yeşili gör, anında dokun. Refleksini ölç."
+    },
+    "memory": {
+      "ad": "Hafıza Eşleştirme",
+      "aciklama": "Kartları ezberle, çiftleri en az hamleyle bul."
+    },
+    "sonsaniye": {
+      "ad": "Son Saniye",
+      "aciklama": "Karışık harflerden kelimeyi çöz, süreyi uzat."
+    },
+    "mathrush": {
+      "ad": "Sayı Avı",
+      "aciklama": "10 soru, sayaç işliyor. Hızlı olan kazanır."
+    },
+    "pattern": {
+      "ad": "Sırayı Takip Et",
+      "aciklama": "Renk dizisini izle ve aynı sırayla tekrarla."
+    }
+  },
+  "zorluk": {
+    "sec": "Zorluk seç",
+    "kolay": "KOLAY",
+    "orta": "ORTA",
+    "zor": "ZOR",
+    "modSec": "Mod seç",
+    "dokunmali": "DOKUNMALI",
+    "yazmali": "YAZMALI"
+  },
+  "oyun": {
+    "hamle": "HAMLE",
+    "eslesme": "EŞLEŞME",
+    "tur": "TUR",
+    "seviye": "SEVİYE",
+    "skor": "SKOR",
+    "izle": "İzle...",
+    "simdiSen": "Şimdi sen tekrarla!",
+    "kartlariEzberle": "Kartları ezberle! {{sayi}}",
+    "sureDoldu": "Süre doldu!",
+    "dogru": "DOĞRU!",
+    "yanlis": "YANLIŞ",
+    "pas": "PAS",
+    "onayla": "ONAYLA",
+    "mukemmel": "MÜKEMMEL!",
+    "bolumTamam": "BÖLÜM TAMAM!",
+    "xpKazandin": "+{{xp}} XP kazandın!",
+    "kullanilanHamle": "Kullanılan Hamle",
+    "eslestirilenCift": "Eşleştirilen Çift",
+    "dogruCevap": "Doğru Cevap",
+    "toplamPuan": "Toplam Puan",
+    "ulasilanSeviye": "Ulaşılan Seviye",
+    "tamamlananTur": "Tamamlanan Tur"
+  },
+  "skorTablosu": {
+    "baslik": "Skor",
+    "henuzYok": "Henüz skor yok",
+    "ilkSenOl": "İlk oynayan sen ol!",
+    "ilkSenOlZorluk": "Bu zorlukta ilk oynayan sen ol!",
+    "kezOynadi": "{{sayi}} kez oynadı",
+    "seninSiran": "Senin Sıran:",
+    "sen": "Sen"
+  },
+  "ayarlar": {
+    "baslik": "Ayarlar",
+    "karanlikTema": "Karanlık Tema",
+    "titresim": "Titreşim",
+    "sesEfektleri": "Ses Efektleri",
+    "arkaPlanMuzigi": "Arka Plan Müziği",
+    "dil": "Dil",
+    "cikisYap": "Hesaptan Çıkış Yap",
+    "hesabiSil": "Hesabımı Sil",
+    "aydinlikTema": "Aydınlık Tema",
+    "hesapSilBaslik": "Hesabı sil",
+    "hesapSilMetin": "Tüm skorların, XP'in ve coinlerin kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+    "vazgec": "Vazgeç",
+    "hesapSilinemedi": "Hesap silinemedi"
+  },
+  "profil": {
+    "baslik": "Profil",
+    "toplamSkor": "Toplam Skor",
+    "oynananOyun": "Oynanan Oyun",
+    "enIyiRozet": "EN İYİ ROZET",
+    "oyunDagilimi": "Oyun Dağılımı",
+    "enCokOynadigin": "En çok oynadığın:"
+  },
+  "gorevler": {
+    "baslik": "Görevler",
+    "tamamlanan": "TAMAMLANAN",
+    "coinAlindi": "{{alinan}} / {{toplam}} coin alındı",
+    "yenilendi": "Görevler {{tarih}} tarihinde yenilendi",
+    "kalanGun": "Yeni görevlere {{gun}} gün kaldı"
+  },
+  "magaza": {
+    "baslik": "Mağaza",
+    "bakiye": "BAKİYEN",
+    "cerceveler": "ÇERÇEVELER",
+    "unvanlar": "UNVANLAR",
+    "kusan": "KUŞAN",
+    "satinAl": "SATIN AL",
+    "kusanildi": "KUŞANILDI"
+  },
+  "hakkinda": {
+    "baslik": "Hakkında",
+    "ekip": "EKİP",
+    "teknolojiler": "KULLANILAN TEKNOLOJİLER",
+    "ozelTesekkurler": "ÖZEL TEŞEKKÜRLER",
+    "tesekkurMetni": "Tüm ArcadeZone Oyuncularına!",
+    "gizlilikPolitikasi": "Gizlilik Politikası",
+    "tanitim": "ArcadeZone, refleks, hafıza, kelime ve matematik becerilerini geliştiren beş mini oyundan oluşan bir koleksiyondur. Bir okul projesi olarak başladı, sonrasında geliştirilerek yayınlandı."
+  }
+}

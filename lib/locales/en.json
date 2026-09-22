@@ -1,0 +1,147 @@
+{
+  "ortak": {
+    "geriDon": "Go Back",
+    "anaMenu": "Home",
+    "yenidenOyna": "Play Again",
+    "zorlukDegistir": "Change Difficulty",
+    "modDegistir": "Change Mode",
+    "kapat": "Close",
+    "iptal": "Cancel",
+    "tamam": "OK",
+    "kaydet": "Save",
+    "yukleniyor": "Loading...",
+    "hazirOl": "Get ready!",
+    "coin": "coins",
+    "seviye": "Level",
+    "xp": "XP",
+    "puan": "Points"
+  },
+  "sekmeler": {
+    "anaMenu": "Home",
+    "oyunlar": "Games",
+    "gorevler": "Quests",
+    "magaza": "Shop",
+    "skor": "Ranks",
+    "profil": "Profile",
+    "ayarlar": "Settings",
+    "hakkinda": "About"
+  },
+  "anaMenu": {
+    "oyna": "PLAY",
+    "oynaAlt": "{{sayi}} mini games are waiting"
+  },
+  "oyunlar": {
+    "baslik": "Games",
+    "altBaslik": "{{sayi}} games · Earn XP as you play",
+    "reaction": {
+      "ad": "Reaction Test",
+      "aciklama": "Wait for green, then tap instantly. Measure your reflexes."
+    },
+    "memory": {
+      "ad": "Memory Match",
+      "aciklama": "Memorise the cards and find every pair in as few moves as you can."
+    },
+    "sonsaniye": {
+      "ad": "Last Second",
+      "aciklama": "Unscramble the letters into a word and buy yourself more time."
+    },
+    "mathrush": {
+      "ad": "Number Hunt",
+      "aciklama": "10 questions, clock running. The fastest wins."
+    },
+    "pattern": {
+      "ad": "Follow the Sequence",
+      "aciklama": "Watch the colour sequence, then repeat it in the same order."
+    }
+  },
+  "zorluk": {
+    "sec": "Choose difficulty",
+    "kolay": "EASY",
+    "orta": "MEDIUM",
+    "zor": "HARD",
+    "modSec": "Choose mode",
+    "dokunmali": "TAP",
+    "yazmali": "TYPE"
+  },
+  "oyun": {
+    "hamle": "MOVES",
+    "eslesme": "MATCHES",
+    "tur": "ROUND",
+    "seviye": "LEVEL",
+    "skor": "SCORE",
+    "izle": "Watch...",
+    "simdiSen": "Now repeat it!",
+    "kartlariEzberle": "Memorise the cards! {{sayi}}",
+    "sureDoldu": "Time's up!",
+    "dogru": "CORRECT!",
+    "yanlis": "WRONG",
+    "pas": "SKIP",
+    "onayla": "SUBMIT",
+    "mukemmel": "PERFECT!",
+    "bolumTamam": "LEVEL COMPLETE!",
+    "xpKazandin": "+{{xp}} XP earned!",
+    "kullanilanHamle": "Moves Used",
+    "eslestirilenCift": "Pairs Matched",
+    "dogruCevap": "Correct Answers",
+    "toplamPuan": "Total Points",
+    "ulasilanSeviye": "Level Reached",
+    "tamamlananTur": "Rounds Completed"
+  },
+  "skorTablosu": {
+    "baslik": "Ranks",
+    "henuzYok": "No scores yet",
+    "ilkSenOl": "Be the first to play!",
+    "ilkSenOlZorluk": "Be the first to play on this difficulty!",
+    "kezOynadi": "played {{sayi}} times",
+    "seninSiran": "Your Rank:",
+    "sen": "You"
+  },
+  "ayarlar": {
+    "baslik": "Settings",
+    "karanlikTema": "Dark Theme",
+    "titresim": "Haptics",
+    "sesEfektleri": "Sound Effects",
+    "arkaPlanMuzigi": "Background Music",
+    "dil": "Language",
+    "cikisYap": "Sign Out",
+    "hesabiSil": "Delete My Account",
+    "aydinlikTema": "Light Theme",
+    "hesapSilBaslik": "Delete account",
+    "hesapSilMetin": "All your scores, XP and coins will be permanently deleted. This cannot be undone.",
+    "vazgec": "Cancel",
+    "hesapSilinemedi": "Account could not be deleted"
+  },
+  "profil": {
+    "baslik": "Profile",
+    "toplamSkor": "Total Score",
+    "oynananOyun": "Games Played",
+    "enIyiRozet": "TOP BADGE",
+    "oyunDagilimi": "Game Breakdown",
+    "enCokOynadigin": "Most played:"
+  },
+  "gorevler": {
+    "baslik": "Quests",
+    "tamamlanan": "COMPLETED",
+    "coinAlindi": "{{alinan}} / {{toplam}} coins claimed",
+    "yenilendi": "Quests refreshed on {{tarih}}",
+    "kalanGun": "{{gun}} days until new quests"
+  },
+  "magaza": {
+    "baslik": "Shop",
+    "bakiye": "BALANCE",
+    "cerceveler": "FRAMES",
+    "unvanlar": "TITLES",
+    "kusan": "EQUIP",
+    "satinAl": "BUY",
+    "kusanildi": "EQUIPPED"
+  },
+  "hakkinda": {
+    "baslik": "About",
+    "ekip": "TEAM",
+    "teknolojiler": "BUILT WITH",
+    "ozelTesekkurler": "SPECIAL THANKS",
+    "tesekkurMetni": "To every ArcadeZone player!",
+    "gizlilikPolitikasi": "Privacy Policy",
+    "tanitim": "ArcadeZone is a collection of five mini games that sharpen your reflexes, memory, vocabulary and mental maths. It started as a school project and grew into a published app."
+  }
+}

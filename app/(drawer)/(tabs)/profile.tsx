@@ -8,10 +8,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../../context/AuthContext";
-import { GameKey, useScores } from "../../context/ScoreContext";
-import { useTheme } from "../../context/ThemeContext";
-import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../../context/AuthContext";
+import { GameKey, useScores } from "../../../context/ScoreContext";
+import { useTheme } from "../../../context/ThemeContext";
+import { supabase } from "../../../lib/supabase";
 
 type PlayerStats = {
   username: string;
@@ -426,7 +426,7 @@ export default function ProfileScreen() {
             styles.menuBtn,
             { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
           ]}
-          onPress={() => router.push("/(tabs)")}
+          onPress={() => router.push("/(drawer)/(tabs)")}
         >
           <Text style={[styles.menuBtnText, { color: colors.text }]}>
             ANA MENÜ

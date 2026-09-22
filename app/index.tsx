@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { isOnboardingDone } from "./onboarding";
 
+// Not: dil yüklemesi _layout.tsx'te yapılıyor, burada olmamalı.
 export default function Index() {
   const { session, loading } = useAuth();
   const { colors } = useTheme();
@@ -40,7 +41,7 @@ export default function Index() {
 
   // Onboarding yapılmış, auth durumuna göre yönlendir
   if (session) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(drawer)/(tabs)" />;
   }
 
   return <Redirect href="/(auth)/login" />;

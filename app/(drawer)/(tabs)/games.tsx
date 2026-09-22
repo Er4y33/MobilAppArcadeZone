@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Image,
@@ -12,13 +13,13 @@ import {
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useSound } from "../../context/SoundContext";
-import { useTheme } from "../../context/ThemeContext";
+import { useSound } from "../../../context/SoundContext";
+import { useTheme } from "../../../context/ThemeContext";
 
+// Başlık ve açıklama artık burada değil, locales/*.json içinde:
+// oyunlar.<id>.ad  ve  oyunlar.<id>.aciklama
 type Oyun = {
   id: string;
-  baslik: string;
-  aciklama: string;
   emoji: string;
   renkAnahtari:
     | "gameReaction"
@@ -26,46 +27,16 @@ type Oyun = {
     | "gameWord"
     | "gameMath"
     | "gamePattern";
-  // Görsel hazır olunca: gorsel: require("../../assets/games/memory.png")
+  // Görsel hazır olunca: gorsel: require("../../../assets/games/memory.png")
   gorsel?: ImageSourcePropType;
 };
 
 const OYUNLAR: Oyun[] = [
-  {
-    id: "reaction",
-    baslik: "Tepki Testi",
-    aciklama: "Yeşili gör, anında dokun. Refleksini ölç.",
-    emoji: "⚡",
-    renkAnahtari: "gameReaction",
-  },
-  {
-    id: "memory",
-    baslik: "Hafıza Eşleştirme",
-    aciklama: "Kartları ezberle, çiftleri en az hamleyle bul.",
-    emoji: "🧠",
-    renkAnahtari: "gameMemory",
-  },
-  {
-    id: "sonsaniye",
-    baslik: "Son Saniye",
-    aciklama: "Karışık harflerden kelimeyi çöz, süreyi uzat.",
-    emoji: "⏱",
-    renkAnahtari: "gameWord",
-  },
-  {
-    id: "mathrush",
-    baslik: "Sayı Avı",
-    aciklama: "10 soru, sayaç işliyor. Hızlı olan kazanır.",
-    emoji: "🔢",
-    renkAnahtari: "gameMath",
-  },
-  {
-    id: "pattern",
-    baslik: "Sırayı Takip Et",
-    aciklama: "Renk dizisini izle ve aynı sırayla tekrarla.",
-    emoji: "🎯",
-    renkAnahtari: "gamePattern",
-  },
+  { id: "reaction", emoji: "⚡", renkAnahtari: "gameReaction" },
+  { id: "memory", emoji: "🧠", renkAnahtari: "gameMemory" },
+  { id: "sonsaniye", emoji: "⏱", renkAnahtari: "gameWord" },
+  { id: "mathrush", emoji: "🔢", renkAnahtari: "gameMath" },
+  { id: "pattern", emoji: "🎯", renkAnahtari: "gamePattern" },
 ];
 
 const KENAR = 20; // ScrollView yatay padding
@@ -76,12 +47,13 @@ const KART_G = Math.floor((EKRAN_G - KENAR * 2 - ARA) / 2);
 export default function GamesScreen() {
   const { colors } = useTheme();
   const { cal } = useSound();
+  const { t } = useTranslation();
 
   const ac = (oyun: Oyun) => {
     cal("click");
     router.push({
       pathname: "/game/[id]",
-      params: { id: oyun.id, title: oyun.baslik },
+      params: { id: oyun.id, title: t(`oyunlar.${oyun.id}.ad`) },
     });
   };
 
@@ -93,9 +65,11 @@ export default function GamesScreen() {
         contentContainerStyle={styles.icerik}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.title, { color: colors.text }]}>Oyunlar</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {t("oyunlar.baslik")}
+        </Text>
         <Text style={[styles.altBaslik, { color: colors.textMuted }]}>
-          {OYUNLAR.length} oyun · Oynadıkça XP kazan
+          {t("oyunlar.altBaslik", { sayi: OYUNLAR.length })}
         </Text>
 
         <View style={styles.izgara}>
@@ -133,17 +107,15 @@ export default function GamesScreen() {
                       style={[styles.kartBaslik, { color: colors.text }]}
                       numberOfLines={1}
                     >
-                      {oyun.baslik}
+                      {t(`oyunlar.${oyun.id}.ad`)}
                     </Text>
                     <Text
                       style={[styles.kartAciklama, { color: colors.textMuted }]}
                       numberOfLines={2}
                     >
-                      {oyun.aciklama}
+                      {t(`oyunlar.${oyun.id}.aciklama`)}
                     </Text>
                   </View>
-
-                  {/* Alt vurgu şeridi — oyunun rengi */}
                 </TouchableOpacity>
               </Animated.View>
             );
@@ -159,7 +131,7 @@ const styles = StyleSheet.create({
   icerik: {
     paddingHorizontal: KENAR,
     paddingTop: 8,
-    paddingBottom: 32,
+    paddingBottom: 100,
   },
   title: { fontSize: 28, fontWeight: "800", marginBottom: 4 },
   altBaslik: { fontSize: 14, marginBottom: 20 },

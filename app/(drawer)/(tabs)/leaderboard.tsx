@@ -16,9 +16,9 @@ import {
 } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../../context/AuthContext";
-import { useTheme } from "../../context/ThemeContext";
-import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../../context/AuthContext";
+import { useTheme } from "../../../context/ThemeContext";
+import { supabase } from "../../../lib/supabase";
 
 type GameKey = "reaction" | "memory" | "sonsaniye" | "mathrush" | "pattern";
 type Difficulty = "kolay" | "orta" | "zor";
@@ -84,6 +84,17 @@ const ZORLUK_SECENEKLERI: Partial<Record<GameKey, ZorlukSecenek[]>> = {
     { key: "orta", label: "YAZMALI" },
   ],
 };
+
+/**
+ * Gizlilik: veritabanındaki username alanı boş kalmışsa e-postaya düşebiliyor.
+ * Başka oyuncuların e-postası hiçbir koşulda ekrana gelmemeli.
+ */
+function gosterilenAd(satir: LeaderboardEntry): string {
+  const ad = satir.username?.trim();
+  if (ad && !ad.includes("@")) return ad;
+  return `Oyuncu${satir.player_id.slice(0, 4).toUpperCase()}`;
+}
+
 export default function LeaderboardScreen() {
   const { user } = useAuth();
   const { colors } = useTheme();
@@ -264,6 +275,8 @@ export default function LeaderboardScreen() {
               entries.map((entry, index) => {
                 const rank = index + 1;
                 const isMe = entry.player_id === user?.id;
+                const ad = gosterilenAd(entry);
+
                 return (
                   <View
                     key={entry.player_id}
@@ -299,7 +312,7 @@ export default function LeaderboardScreen() {
                       ]}
                     >
                       <Text style={styles.avatarText}>
-                        {entry.username.charAt(0).toUpperCase()}
+                        {ad.charAt(0).toUpperCase()}
                       </Text>
                     </View>
 
@@ -310,8 +323,9 @@ export default function LeaderboardScreen() {
                           { color: colors.text },
                           isMe && { color: colors.primary },
                         ]}
+                        numberOfLines={1}
                       >
-                        {entry.username} {isMe && "(Sen)"}
+                        {ad} {isMe && "(Sen)"}
                       </Text>
                       <Text style={[styles.sub, { color: colors.textMuted }]}>
                         {entry.total_plays} kez oynadı

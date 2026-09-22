@@ -1,20 +1,20 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../../context/AuthContext";
-import { useSound } from "../../context/SoundContext";
-import { useTheme } from "../../context/ThemeContext";
-import { hapticSuccess } from "../../lib/haptics";
-import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../../context/AuthContext";
+import { useSound } from "../../../context/SoundContext";
+import { useTheme } from "../../../context/ThemeContext";
+import { hapticSuccess } from "../../../lib/haptics";
+import { supabase } from "../../../lib/supabase";
 type StoreItem = {
   id: string;
   name: string;

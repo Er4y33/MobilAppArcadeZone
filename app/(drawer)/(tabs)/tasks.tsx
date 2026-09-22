@@ -1,29 +1,29 @@
 import React, { useMemo } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  formatShortDate,
-  getDaysUntilReset,
-  getNextResetDate,
-  getWeeklyTasks,
-  getWeekStart,
-  REWARD_BY_DIFFICULTY,
-  TaskDefinition,
-} from "../../constants/tasks";
-import { useAuth } from "../../context/AuthContext";
-import { useScores } from "../../context/ScoreContext";
-import { useSound } from "../../context/SoundContext";
-import { useTheme } from "../../context/ThemeContext";
-import { supabase } from "../../lib/supabase";
+    formatShortDate,
+    getDaysUntilReset,
+    getNextResetDate,
+    getWeeklyTasks,
+    getWeekStart,
+    REWARD_BY_DIFFICULTY,
+    TaskDefinition,
+} from "../../../constants/tasks";
+import { useAuth } from "../../../context/AuthContext";
+import { useScores } from "../../../context/ScoreContext";
+import { useSound } from "../../../context/SoundContext";
+import { useTheme } from "../../../context/ThemeContext";
+import { supabase } from "../../../lib/supabase";
 type TaskProgress = {
   task: TaskDefinition;
   completed: boolean;

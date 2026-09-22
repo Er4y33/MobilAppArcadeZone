@@ -1,11 +1,13 @@
 import { Stack } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "../context/AuthContext";
 import { HapticsProvider } from "../context/HapticsContext";
 import { ScoreProvider } from "../context/ScoreContext";
 import { SoundProvider } from "../context/SoundContext";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
+import { dilBaslat } from "../lib/i18n";
+
 function RootNavigator() {
   const { colors } = useTheme();
 
@@ -20,7 +22,8 @@ function RootNavigator() {
       <Stack.Screen name="index" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
+      {/* Tabs artık drawer'ın içinde */}
+      <Stack.Screen name="(drawer)" />
       <Stack.Screen
         name="game/[id]"
         options={{ headerShown: true, title: "Oyun Detayı" }}
@@ -54,6 +57,15 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  // Dil, ilk ekran çizilmeden önce hazır olmalı
+  const [dilHazir, setDilHazir] = useState(false);
+
+  useEffect(() => {
+    dilBaslat().finally(() => setDilHazir(true));
+  }, []);
+
+  if (!dilHazir) return null;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>

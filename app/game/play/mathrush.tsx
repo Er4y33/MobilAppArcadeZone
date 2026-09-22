@@ -196,7 +196,7 @@ export default function MathRushScreen() {
   };
 
   // Ekrandan çıkılırsa (geri tuşu vb.) oyun arkada devam edip skor kaydetmesin
-   
+
   useEffect(() => zamanlayicilariTemizle, []);
 
   // Son 3 saniye uyarısı
@@ -415,7 +415,7 @@ export default function MathRushScreen() {
 
           <TouchableOpacity
             style={styles.btnSecondary}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={() => router.replace("/")}
           >
             <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
           </TouchableOpacity>

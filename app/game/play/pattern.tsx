@@ -331,7 +331,7 @@ export default function PatternSequenceScreen() {
 
           <TouchableOpacity
             style={styles.btnSecondary}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={() => router.replace("/(drawer)/(tabs)")}
           >
             <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
           </TouchableOpacity>

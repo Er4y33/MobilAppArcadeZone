@@ -1,37 +1,35 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { router, Tabs, usePathname } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
+import { router, Tabs, useNavigation, usePathname } from "expo-router";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../../context/ThemeContext";
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const navigation = useNavigation();
 
+  // Sol: hamburger — drawer'ı açar
+  const HeaderSol = () => (
+    <TouchableOpacity
+      style={{ marginLeft: 16 }}
+      onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+      hitSlop={10}
+    >
+      <Ionicons name="menu" size={26} color={colors.headerText} />
+    </TouchableOpacity>
+  );
+
+  // Sağ: profil kısayolu (Ayarlar drawer'a taşındı)
   const HeaderSag = () => {
     const yol = usePathname();
-    const profildeyiz = yol.includes("/profile");
-    const ayarlardayiz = yol.includes("/settings");
+    if (yol.includes("/profile")) return null;
 
     return (
-      <View style={{ flexDirection: "row", gap: 18, marginRight: 16 }}>
-        {!profildeyiz && (
-          <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
-            <Ionicons
-              name="person-circle"
-              size={26}
-              color={colors.headerText}
-            />
-          </TouchableOpacity>
-        )}
-        {!ayarlardayiz && (
-          <TouchableOpacity onPress={() => router.push("/(tabs)/settings")}>
-            <Ionicons
-              name="settings-outline"
-              size={24}
-              color={colors.headerText}
-            />
-          </TouchableOpacity>
-        )}
+      <View style={{ marginRight: 16 }}>
+        <TouchableOpacity onPress={() => router.push("/profile")} hitSlop={10}>
+          <Ionicons name="person-circle" size={26} color={colors.headerText} />
+        </TouchableOpacity>
       </View>
     );
   };
@@ -44,6 +42,7 @@ export default function TabLayout() {
         },
         headerTintColor: colors.headerText,
         headerTitleAlign: "center",
+        headerLeft: () => <HeaderSol />,
         headerRight: () => <HeaderSag />,
         tabBarStyle: {
           backgroundColor: colors.tabBarBg,
@@ -100,7 +99,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Tab bar'da gizli — header'daki ikonlardan açılır */}
+      {/* Tab bar'da gizli — drawer'dan veya header'dan açılır */}
       <Tabs.Screen name="profile" options={{ title: "Profil", href: null }} />
       <Tabs.Screen name="settings" options={{ title: "Ayarlar", href: null }} />
       <Tabs.Screen name="backend" options={{ href: null }} />

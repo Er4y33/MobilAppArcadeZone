@@ -33,7 +33,7 @@ export default function LoginScreen() {
     if (error) {
       Alert.alert("Giriş Başarısız", error);
     } else {
-      router.replace("/(tabs)");
+      router.replace("/(drawer)/(tabs)");
     }
   };
 

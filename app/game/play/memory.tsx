@@ -448,7 +448,7 @@ export default function MemoryMatchScreen() {
 
           <TouchableOpacity
             style={styles.btnSecondary}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={() => router.replace("/(drawer)/(tabs)")}
           >
             <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
           </TouchableOpacity>

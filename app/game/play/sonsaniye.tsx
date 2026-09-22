@@ -99,7 +99,7 @@ export default function SonSaniyeScreen() {
   };
 
   // Ekrandan çıkılırsa oyun arkada devam edip skor kaydetmesin
-   
+
   useEffect(() => hepsiniTemizle, []);
 
   // Son 3 saniye uyarısı
@@ -421,7 +421,7 @@ export default function SonSaniyeScreen() {
 
           <TouchableOpacity
             style={styles.btnSecondary}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={() => router.replace("/(drawer)/(tabs)")}
           >
             <Text style={styles.btnSecondaryText}>ANA MENÜ</Text>
           </TouchableOpacity>

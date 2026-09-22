@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
-import { api } from "../../lib/api";
+import { api } from "../../../lib/api";
 
 export default function BackendScreen() {
   const [players, setPlayers] = useState<any[]>([]);
