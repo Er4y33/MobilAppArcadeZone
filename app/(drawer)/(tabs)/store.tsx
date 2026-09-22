@@ -15,8 +15,8 @@ import { useAuth } from "../../../context/AuthContext";
 import { useSound } from "../../../context/SoundContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { hapticSuccess } from "../../../lib/haptics";
-import { unvanMetni, urunAciklama, urunAdi } from "../../../lib/magazaUrun";
 import { supabase } from "../../../lib/supabase";
+import { useMagazaMetni } from "../../../lib/useCeviri";
 
 type StoreItem = {
   id: string;
@@ -41,6 +41,7 @@ export default function StoreScreen() {
   const { colors } = useTheme();
   const { cal } = useSound();
   const { t } = useTranslation();
+  const metin = useMagazaMetni();
   const [items, setItems] = useState<StoreItem[]>([]);
   const [ownedIds, setOwnedIds] = useState<string[]>([]);
   const [category, setCategory] = useState<Category>("frame");
@@ -87,7 +88,7 @@ export default function StoreScreen() {
     Alert.alert(
       t("magaza.satinAlBaslik"),
       t("magaza.satinAlSoru", {
-        ad: urunAdi(item.id, item.name),
+        ad: metin.ad(item.id, item.name),
         fiyat: item.price,
       }),
       [
@@ -111,7 +112,7 @@ export default function StoreScreen() {
             await fetchData();
             Alert.alert(
               t("magaza.tebrikler"),
-              t("magaza.artikSenin", { ad: urunAdi(item.id, item.name) }),
+              t("magaza.artikSenin", { ad: metin.ad(item.id, item.name) }),
             );
           },
         },
@@ -248,19 +249,19 @@ export default function StoreScreen() {
                           { color: colors.accent },
                         ]}
                       >
-                        {unvanMetni(item.id, item.value)}
+                        {metin.unvan(item.id, item.value)}
                       </Text>
                     </View>
                   )}
 
                   <View style={styles.itemInfo}>
                     <Text style={[styles.itemName, { color: colors.text }]}>
-                      {urunAdi(item.id, item.name)}
+                      {metin.ad(item.id, item.name)}
                     </Text>
                     <Text
                       style={[styles.itemDesc, { color: colors.textMuted }]}
                     >
-                      {urunAciklama(item.id, item.description)}
+                      {metin.aciklama(item.id, item.description)}
                     </Text>
                   </View>
                 </View>

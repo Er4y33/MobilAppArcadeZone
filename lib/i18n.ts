@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Localization from "expo-localization";
-import i18n from "i18next";
+import i18next, { changeLanguage } from "i18next";
 import { initReactI18next } from "react-i18next";
 
 import en from "./locales/en.json";
@@ -44,9 +44,10 @@ export async function dilBaslat(): Promise<DilKodu> {
     kod = desteklenenMi(cihaz) ? cihaz : YEDEK_DIL;
   }
 
-  if (!i18n.isInitialized) {
-    await i18n.use(initReactI18next).init({
-      compatibilityJSON: "v3", // Android'de çoğul kuralları için
+  if (!i18next.isInitialized) {
+    // i18next.use(...) — düz `use` olarak çağrılamaz, eslint onu React hook'u sanıyor.
+    // eslint-disable-next-line import/no-named-as-default-member
+    await i18next.use(initReactI18next).init({
       resources: KAYNAKLAR,
       lng: kod,
       fallbackLng: YEDEK_DIL,
@@ -54,7 +55,7 @@ export async function dilBaslat(): Promise<DilKodu> {
       returnNull: false,
     });
   } else {
-    await i18n.changeLanguage(kod);
+    await changeLanguage(kod);
   }
 
   return kod as DilKodu;
@@ -62,7 +63,7 @@ export async function dilBaslat(): Promise<DilKodu> {
 
 /** Ayarlar ekranından dil değiştirir ve tercihi kaydeder */
 export async function dilDegistir(kod: DilKodu) {
-  await i18n.changeLanguage(kod);
+  await changeLanguage(kod);
   try {
     await AsyncStorage.setItem(DEPO_ANAHTARI, kod);
   } catch {
@@ -71,8 +72,8 @@ export async function dilDegistir(kod: DilKodu) {
 }
 
 export function aktifDil(): DilKodu {
-  const k = i18n.language?.split("-")[0];
+  const k = i18next.language?.split("-")[0];
   return desteklenenMi(k) ? k : YEDEK_DIL;
 }
 
-export default i18n;
+export default i18next;

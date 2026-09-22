@@ -12,21 +12,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  formatShortDate,
   getDaysUntilReset,
   getNextResetDate,
   getWeeklyTasks,
   getWeekStart,
   REWARD_BY_DIFFICULTY,
   TaskDefinition,
-  taskDescription,
-  taskTitle,
 } from "../../../constants/tasks_const";
 import { useAuth } from "../../../context/AuthContext";
 import { useScores } from "../../../context/ScoreContext";
 import { useSound } from "../../../context/SoundContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { supabase } from "../../../lib/supabase";
+import { useGorevMetni } from "../../../lib/useCeviri";
 
 type TaskProgress = {
   task: TaskDefinition;
@@ -41,6 +39,7 @@ export default function TasksScreen() {
   const { colors } = useTheme();
   const { user, refreshProfile } = useAuth();
   const { t } = useTranslation();
+  const metin = useGorevMetni();
   const [refreshing, setRefreshing] = React.useState(false);
   const [claimedIds, setClaimedIds] = React.useState<string[]>([]);
   const [claimingId, setClaimingId] = React.useState<string | null>(null);
@@ -178,11 +177,11 @@ export default function TasksScreen() {
       {/* Yenilenme bilgisi */}
       <View style={[styles.resetCard, { backgroundColor: colors.surfaceAlt }]}>
         <Text style={[styles.resetText, { color: colors.textSecondary }]}>
-          🔄 {t("gorevler.yenilendi", { tarih: formatShortDate(weekStart) })}
+          🔄 {t("gorevler.yenilendi", { tarih: metin.kisaTarih(weekStart) })}
         </Text>
         <Text style={[styles.resetSub, { color: colors.textMuted }]}>
           {t("gorevler.kalanGun", { gun: daysLeft })} (
-          {formatShortDate(nextReset)})
+          {metin.kisaTarih(nextReset)})
         </Text>
       </View>
 
@@ -250,7 +249,7 @@ export default function TasksScreen() {
                 <Text style={styles.taskEmoji}>{item.task.emoji}</Text>
                 <View style={styles.taskTitleBox}>
                   <Text style={[styles.taskTitle, { color: colors.text }]}>
-                    {taskTitle(item.task)}
+                    {metin.baslik(item.task)}
                   </Text>
                   <Text style={[styles.taskGame, { color: colors.textMuted }]}>
                     {t(`oyunlar.${item.task.gameId}.ad`)}
@@ -269,7 +268,7 @@ export default function TasksScreen() {
               </View>
 
               <Text style={[styles.taskDesc, { color: colors.textSecondary }]}>
-                {taskDescription(item.task)}
+                {metin.aciklama(item.task)}
               </Text>
 
               {/* Zorluk + Ödül etiketleri */}

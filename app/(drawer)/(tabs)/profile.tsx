@@ -12,8 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../../context/AuthContext";
 import { GameKey, useScores } from "../../../context/ScoreContext";
 import { useTheme } from "../../../context/ThemeContext";
-import { unvanMetni } from "../../../lib/magazaUrun";
 import { supabase } from "../../../lib/supabase";
+import { useMagazaMetni } from "../../../lib/useCeviri";
 
 type PlayerStats = {
   username: string;
@@ -62,6 +62,7 @@ export default function ProfileScreen() {
   const { user, profile } = useAuth();
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const metin = useMagazaMetni();
 
   const [stats, setStats] = useState<PlayerStats>({
     username: "",
@@ -229,7 +230,7 @@ export default function ProfileScreen() {
               <Text
                 style={[styles.equippedBadgeText, { color: colors.accent }]}
               >
-                {unvanMetni(equippedBadge.id, equippedBadge.value)}
+                {metin.unvan(equippedBadge.id, equippedBadge.value)}
               </Text>
             </View>
           )}
